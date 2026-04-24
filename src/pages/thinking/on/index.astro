@@ -1,0 +1,49 @@
+---
+import { getCollection } from "astro:content";
+import { formatThinkingDate, groupEntriesByDate } from "@/lib/thinking";
+import { SITE_TITLE } from "@/consts";
+import Layout from "@/layouts/Layout.astro";
+
+const dateGroups = groupEntriesByDate(await getCollection("blog"));
+---
+
+<Layout
+    title={`${SITE_TITLE} — Thinking by date`}
+    description="Thinking grouped by date."
+    showNavigation={false}
+>
+    <section class="space-y-8">
+        <header class="space-y-4 border-b border-border pb-6">
+            <a
+                href="/thinking"
+                class="font-mono text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-primary"
+            >
+                /thinking
+            </a>
+            <h1
+                class="font-brand text-[clamp(2rem,9vw,4.25rem)] font-semibold leading-none tracking-tight text-foreground"
+            >
+                /on
+            </h1>
+        </header>
+
+        <div class="space-y-0">
+            {
+                dateGroups.map((group) => (
+                    <a
+                        href={`/thinking/on/${group.dateSlug}/`}
+                        class="grid gap-1 border-b border-border py-4 text-muted-foreground no-underline transition-colors duration-200 last:border-0 hover:text-primary sm:grid-cols-[9rem_1fr]"
+                    >
+                        <span class="font-mono text-xs">{group.dateSlug}</span>
+                        <span class="text-foreground">
+                            {formatThinkingDate(group.date)}
+                            <span class="ml-2 font-mono text-xs text-muted-foreground">
+                                {group.entries.length}
+                            </span>
+                        </span>
+                    </a>
+                ))
+            }
+        </div>
+    </section>
+</Layout>

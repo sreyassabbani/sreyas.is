@@ -1,0 +1,99 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import {
+    formatThinkingDate,
+    getThinkingHref,
+    groupEntriesByDate,
+} from "@/lib/thinking";
+import { SITE_TITLE } from "@/consts";
+import Layout from "@/layouts/Layout.astro";
+
+type RenderedShortEntry = {
+    entry: CollectionEntry<"blog">;
+    Content: Awaited<ReturnType<typeof render>>["Content"];
+};
+
+export async function getStaticPaths() {
+    const groups = groupEntriesByDate(await getCollection("blog"));
+    return groups.map((group) => ({
+        params: { date: group.dateSlug },
+        props: group,
+    }));
+}
+
+const { date, dateSlug, longEntries, shortEntries } = Astro.props;
+const renderedShortEntries: RenderedShortEntry[] = await Promise.all(
+    shortEntries.map(async (entry) => ({
+        entry,
+        Content: (await render(entry)).Content,
+    })),
+);
+---
+
+<Layout
+    title={`${SITE_TITLE} — Thinking on ${formatThinkingDate(date)}`}
+    description={`Thinking from ${formatThinkingDate(date)}.`}
+    showNavigation={false}
+>
+    <section class="space-y-8">
+        <header class="space-y-4 border-b border-border pb-6">
+            <a
+                href="/thinking/on"
+                class="font-mono text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-primary"
+            >
+                /thinking/on
+            </a>
+            <p class="font-mono text-xs text-muted-foreground">{dateSlug}</p>
+            <h1
+                class="text-balance font-heading text-3xl font-semibold tracking-tight text-foreground"
+            >
+                {formatThinkingDate(date)}
+            </h1>
+        </header>
+
+        {
+            longEntries.length > 0 && (
+                <section class="space-y-4" aria-label="Posts">
+                    <div class="space-y-4">
+                        {longEntries.map((entry) => (
+                            <article class="border-b border-border pb-5 last:border-0">
+                                <a
+                                    href={getThinkingHref(entry)}
+                                    class="group block no-underline"
+                                >
+                                    <h3 class="font-heading text-2xl font-semibold leading-8 text-foreground underline decoration-dashed underline-offset-4 transition-colors duration-200 group-hover:text-primary group-hover:decoration-solid">
+                                        {entry.data.title}
+                                    </h3>
+                                    <p class="mt-2 text-muted-foreground">
+                                        {entry.data.description}
+                                    </p>
+                                </a>
+                            </article>
+                        ))}
+                    </div>
+                </section>
+            )
+        }
+
+        {
+            renderedShortEntries.length > 0 && (
+                <section class="space-y-5" aria-label="Notes">
+                    <div class="space-y-6 border-l border-border pl-4 sm:pl-5">
+                        {renderedShortEntries.map(({ entry, Content }) => (
+                            <article id={entry.id} class="scroll-mt-24">
+                                <header class="mb-2">
+                                    <h3 class="font-heading text-lg font-semibold text-foreground">
+                                        {entry.data.title}
+                                    </h3>
+                                </header>
+                                <div class="blog-prose prose prose-neutral dark:prose-invert max-w-none text-sm leading-7 text-foreground prose-p:my-0 prose-p:mb-3 prose-a:text-primary prose-a:underline prose-a:underline-offset-4">
+                                    <Content />
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                </section>
+            )
+        }
+    </section>
+</Layout>

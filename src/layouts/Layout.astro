@@ -1,58 +1,65 @@
 ---
 import BaseHead from "../components/BaseHead.astro";
-import Navigation from "../components/Navigation.astro";
+import Navigation, { type Props as NavProps } from "../components/Navigation.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
+
+export type Props = {
+    title: string,
+    description: string,
+    variant?: "default" | "home" | "bare",
+    showNavigation?: boolean
+};
 
 const {
     title = SITE_TITLE,
     description = SITE_DESCRIPTION,
     variant = "default",
-} = Astro.props;
+    showNavigation = true,
+}: Props = Astro.props;
 
-const isHome = variant === "home";
+const layouts = {
+    bare: {
+        body: "bg-background text-foreground overflow-x-hidden min-h-screen",
+        outer: "mx-auto flex w-full justify-center min-h-screen",
+        shell: "page-shell flex w-full flex-col min-h-screen max-w-3xl px-4 py-6 sm:px-6 sm:py-8 md:px-8 md:py-10",
+        main: "w-full flex-1",
+    },
+
+    home: {
+        body: "bg-background text-foreground overflow-x-hidden overflow-hidden md:min-h-screen md:overflow-y-auto",
+        outer: "mx-auto flex w-full justify-center min-h-dvh md:min-h-screen md:items-center",
+        shell: "page-shell flex w-full flex-col h-dvh max-w-4xl px-4 pb-4 pt-3 sm:px-6 sm:pb-6 sm:pt-4 md:min-h-screen md:items-center md:justify-center md:gap-10 md:px-12 md:py-12 lg:px-16 lg:py-16",
+        main: "w-full flex min-h-0 flex-1 flex-col pt-4 sm:pt-6 md:mt-4 md:flex-none md:items-center md:justify-center md:gap-6 md:pt-0",
+    },
+
+    default: {
+        body: "bg-background text-foreground overflow-x-hidden min-h-screen",
+        outer: "mx-auto flex w-full justify-center min-h-screen",
+        shell: "page-shell flex w-full flex-col min-h-screen max-w-3xl px-4 pb-8 pt-3 sm:px-6 sm:pb-10 sm:pt-4 md:px-8 md:pb-12 md:pt-6",
+        main: "w-full flex-1 pt-6 sm:pt-8 md:pt-2",
+    },
+};
+
+const layout = !showNavigation ? layouts.bare : layouts[variant] ?? layouts.default;
 ---
 
 <html lang="en">
     <head>
         <BaseHead title={title} description={description} />
     </head>
-    <body
-        class:list={[
-            "bg-background text-foreground overflow-x-hidden",
-            isHome
-                ? "overflow-hidden md:min-h-screen md:overflow-y-auto"
-                : "min-h-screen",
-        ]}
-    >
-        <div
-            class:list={[
-                "mx-auto flex w-full justify-center",
-                isHome
-                    ? "min-h-dvh md:min-h-screen md:items-center"
-                    : "min-h-screen",
-            ]}
-        >
-            <div
-                class:list={[
-                    "page-shell flex w-full flex-col",
-                    isHome
-                        ? "h-dvh max-w-4xl px-4 pb-4 pt-3 sm:px-6 sm:pb-6 sm:pt-4 md:min-h-screen md:items-center md:justify-center md:gap-10 md:px-12 md:py-12 lg:px-16 lg:py-16"
-                        : "min-h-screen max-w-3xl px-4 pb-8 pt-3 sm:px-6 sm:pb-10 sm:pt-4 md:px-8 md:pb-12 md:pt-6",
-                ]}
-            >
-                <header
-                    class="sticky top-0 z-40 w-full bg-background/94 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 md:static md:bg-transparent md:backdrop-blur-none md:supports-[backdrop-filter]:bg-transparent"
-                >
-                    <Navigation />
-                </header>
-                <main
-                    class:list={[
-                        "w-full",
-                        isHome
-                            ? "flex min-h-0 flex-1 flex-col pt-4 sm:pt-6 md:mt-4 md:flex-none md:items-center md:justify-center md:gap-6 md:pt-0"
-                            : "flex-1 pt-6 sm:pt-8 md:pt-2",
-                    ]}
-                >
+
+    <body class={layout.body}>
+        <div class={layout.outer}>
+            <div class={layout.shell}>
+                {
+                    showNavigation && (
+                        <header class="sticky top-0 z-40 w-full bg-background/94 backdrop-blur-sm supports-[backdrop-filter]:bg-background/80 md:static md:bg-transparent md:backdrop-blur-none md:supports-[backdrop-filter]:bg-transparent">
+                            <Navigation />
+                        </header>
+                    )
+                }
+
+                <main class={layout.main}>
                     <slot />
                 </main>
             </div>

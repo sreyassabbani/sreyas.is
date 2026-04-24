@@ -44,13 +44,15 @@ site.
 - Light and dark themes need equal attention.
 - Blog routing, RSS, sitemap, and generated blog sync are high-risk areas; run
   `bun run build` or `bun run ci` after touching them.
+- Public writing lives under `/thinking`; keep `/blog` only as a compatibility
+  redirect surface for old links.
 - Component changes should preserve accessibility semantics and keyboard paths,
   especially in `src/components/ui`.
 
 ## Design Context
 
 ### Users
-This is a personal site for technically curious readers, friends, peers, and anyone landing here to get a sense of Sreyas and browse his writing. The main jobs are to understand who he is, what he cares about, and then move naturally into the blog.
+This is a personal site for technically curious readers, friends, peers, and anyone landing here to get a sense of Sreyas and browse his writing. The main jobs are to understand who he is, what he cares about, and then move naturally into his thinking and writing.
 
 ### Brand Personality
 Thoughtful, modest, precise.

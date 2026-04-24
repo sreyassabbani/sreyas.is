@@ -2,12 +2,19 @@
 import ThemeToggle from "./ThemeToggle.astro";
 
 const navLinkClass =
-    "group relative flex items-center justify-center pb-1 text-sm text-foreground no-underline transition-colors duration-200 hover:text-primary md:pb-2";
+    "group relative flex items-center justify-center pb-4 translate-y-4 md:translate-y-2 text-sm text-foreground no-underline transition-colors duration-200 hover:text-primary md:pb-2";
 const navUnderlineClass =
     "absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-primary transition-transform duration-300 group-hover:scale-x-100";
 const socialLinkClass =
-    "flex size-8 items-center justify-center rounded-full text-foreground transition-colors duration-200 hover:bg-secondary hover:text-primary md:size-auto md:rounded-none md:hover:bg-transparent";
+    "flex size-8 items-center justify-center rounded-full text-foreground transition-colors duration-200 hover:bg-secondary hover:text-primary md:size-auto md:rounded-none md:hover:bg-transparent translate-y-4 md:translate-y-2";
 const iconClass = "size-4 fill-current md:size-5";
+
+export type Props = {
+};
+
+const { }: Props = Astro.props;
+
+const pathname = Astro.url.pathname;
 ---
 
 <nav
@@ -32,16 +39,22 @@ const iconClass = "size-4 fill-current md:size-5";
     <div
         class="flex items-center justify-between gap-4 md:w-2/3 md:min-w-0 md:justify-end md:gap-4 lg:gap-6"
     >
-        <div class="flex items-center gap-4 md:gap-4 lg:gap-6">
-            <a href="/blog" class={navLinkClass}>
-                Blog
-                <span class={navUnderlineClass}></span>
-            </a>
-            <a href="/about" class={navLinkClass}>
-                More
-                <span class={navUnderlineClass}></span>
-            </a>
-        </div>
+        {pathname == "/" ?
+            <div class="flex items-center gap-4 md:gap-4 lg:gap-6">
+                <a href="/thinking" class={navLinkClass}>
+                    Thinking
+                    <span class={navUnderlineClass}></span>
+                </a>
+                <a href="/about" class={navLinkClass}>
+                    More
+                    <span class={navUnderlineClass}></span>
+                </a>
+            </div>
+        :
+            <div>
+
+            </div>
+        }
 
         <div class="flex items-center gap-1 md:gap-4 md:px-3 md:py-2">
             <a

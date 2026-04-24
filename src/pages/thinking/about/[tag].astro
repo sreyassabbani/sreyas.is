@@ -1,0 +1,77 @@
+---
+import { getCollection } from "astro:content";
+import {
+    formatTag,
+    getAllTags,
+    getDateSlug,
+    getEntriesForTag,
+    getThinkingHref,
+} from "@/lib/thinking";
+import { SITE_TITLE } from "@/consts";
+import Layout from "@/layouts/Layout.astro";
+
+export async function getStaticPaths() {
+    const entries = await getCollection("blog");
+    return getAllTags(entries).map((tag) => ({
+        params: { tag },
+        props: {
+            tag,
+            entries: getEntriesForTag(entries, tag),
+        },
+    }));
+}
+
+const { tag, entries } = Astro.props;
+---
+
+<Layout
+    title={`${SITE_TITLE} — Thinking about ${formatTag(tag)}`}
+    description={`Posts and notes about ${formatTag(tag).toLowerCase()}.`}
+    showNavigation={false}
+>
+    <section class="space-y-8">
+        <header class="space-y-4 border-b border-border pb-6">
+            <a
+                href="/thinking/about"
+                class="font-mono text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-primary"
+            >
+                /thinking/about
+            </a>
+            <h1
+                class="text-balance font-heading text-3xl font-semibold tracking-tight text-foreground"
+            >
+                {formatTag(tag).toLowerCase()}
+            </h1>
+        </header>
+
+        <div class="space-y-5">
+            {
+                entries.map((entry) => (
+                    <article class="grid gap-2 border-b border-border pb-5 last:border-0 sm:grid-cols-[7.5rem_1fr]">
+                        <div class="space-y-1 font-mono text-xs text-muted-foreground">
+                            <a
+                                href={`/thinking/on/${getDateSlug(entry.data.pubDate)}/`}
+                                class="text-muted-foreground no-underline transition-colors duration-200 hover:text-primary"
+                            >
+                                {getDateSlug(entry.data.pubDate)}
+                            </a>
+                        </div>
+                        <div>
+                            <a
+                                href={getThinkingHref(entry)}
+                                class="group block no-underline"
+                            >
+                                <h2 class="font-heading text-xl font-semibold leading-7 text-foreground underline decoration-dashed underline-offset-4 transition-colors duration-200 group-hover:text-primary group-hover:decoration-solid">
+                                    {entry.data.title}
+                                </h2>
+                                <p class="mt-1 text-sm leading-6 text-muted-foreground">
+                                    {entry.data.description}
+                                </p>
+                            </a>
+                        </div>
+                    </article>
+                ))
+            }
+        </div>
+    </section>
+</Layout>
