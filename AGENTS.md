@@ -8,29 +8,31 @@ site.
 ### Project Shape
 - Astro site using Bun, React islands, Tailwind CSS v4, Biome, and strict
   TypeScript.
-- Blog content is generated into `src/content/blog` from a separate blog repo.
-  Treat `src/content/blog` as disposable build input, not source.
+- Content is generated into `src/content` from a separate content repo.
+  Treat `src/content` as disposable build input, not source.
 - The usual source files live in `src/pages`, `src/components`, `src/layouts`,
   `src/lib`, `src/styles`, and `scripts`.
 
 ### Commands
 - Install dependencies: `bun install`
 - Start dev server: `bun run dev`
-- Sync blog content once: `bun run blog:sync`
-- Include untracked local blog drafts during dev: `bun run dev -- --show-untracked`
+- Sync content once: `bun run content:sync`
+- Include untracked local content drafts during dev: `bun run dev -- --show-untracked`
 - Format in place: `bun run fmt`
-- Apply safe Biome fixes: `bun run check:fix`
+- Apply safe fixes: `bun run check:fix`
 - Validate without mutating files: `bun run ci`
 - Type-check only: `bun run typecheck`
 - Build only: `bun run build`
 
 ### Guardrails
-- Do not edit `src/content/blog` directly. Change the blog source repo instead,
-  then run `bun run blog:sync`.
-- Do not commit generated output from `dist`, `.astro`, `.blog-sync-backups`, or
+- Do not edit `src/content` directly. Change the content source repo instead,
+  then run `bun run content:sync`.
+- Do not commit generated output from `dist`, `.astro`, `.content-sync-backups`, or
   `node_modules`.
 - Do not run mutating format/fix commands unless you intend to keep all touched
   files. For final verification, prefer `bun run ci` because it is non-mutating.
+- Biome owns formatting and linting, except `*.astro` files, which are formatted
+  by Prettier with `prettier-plugin-astro`.
 - Before editing, check `git status --short` and avoid overwriting user changes.
 - Keep dependency changes intentional. If `package.json` changes, `bun.lock`
   should normally change with it after `bun install`.
@@ -42,7 +44,7 @@ site.
 ### Review Priorities
 - User-facing copy and layout should stay modest, precise, and personal.
 - Light and dark themes need equal attention.
-- Blog routing, RSS, sitemap, and generated blog sync are high-risk areas; run
+- Content routing, RSS, sitemap, and generated content sync are high-risk areas; run
   `bun run build` or `bun run ci` after touching them.
 - Public writing lives under `/thinking`; keep `/blog` only as a compatibility
   redirect surface for old links.

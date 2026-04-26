@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
   repository_dispatch:
-    types: [ blog-updated ]
+    types: [ content-updated ]
   workflow_dispatch:
 
 permissions:
@@ -20,12 +20,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: site
-      - name: Checkout blog repo
+      - name: Checkout content repo
         uses: actions/checkout@v4
         with:
-          repository: sreyassabbani/blog
-          ref: ${{ github.event.client_payload.blog_sha || 'main' }}
-          path: blog
+          repository: sreyassabbani/content
+          ref: ${{ github.event.client_payload.content_sha || 'main' }}
+          path: content
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
@@ -35,7 +35,7 @@ jobs:
       - name: Build with Astro
         working-directory: ./site
         env:
-          BLOG_CONTENT_DIR: ../blog
+          CONTENT_DIR: ../content
         run: bun run build
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

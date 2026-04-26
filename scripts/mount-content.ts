@@ -21,8 +21,7 @@ export async function pathExists(targetPath: string) {
 }
 
 export async function resolveSourcePath() {
-    const configuredSource =
-        process.env.CONTENT_DIR?.trim() ?? process.env.BLOG_CONTENT_DIR?.trim();
+    const configuredSource = process.env.CONTENT_DIR?.trim();
     const sourceCandidates = [
         configuredSource ? path.resolve(root, configuredSource) : undefined,
         path.join(homedir(), "workflow/content"),
