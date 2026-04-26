@@ -30,4 +30,4 @@ pnpm-debug.log*
 src/content
 
 # local backups for generated blog sync
-.blog-sync-backups/
+.content-sync-backups/
