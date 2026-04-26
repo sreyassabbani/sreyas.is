@@ -1,0 +1,20 @@
+---
+import { getEntry, render } from "astro:content";
+import { SITE_TITLE } from "@/consts";
+import Layout from "@/layouts/Layout.astro";
+
+const page = await getEntry("pages", "now");
+
+if (!page) {
+    throw new Error("Missing content page: now");
+}
+
+const { Content } = await render(page);
+---
+
+<Layout
+    title={`${SITE_TITLE} — ${page.data.title}`}
+    description={page.data.description}
+>
+    <Content />
+</Layout>

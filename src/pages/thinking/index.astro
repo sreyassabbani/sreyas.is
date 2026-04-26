@@ -8,14 +8,11 @@ import {
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/consts";
 import Layout from "@/layouts/Layout.astro";
 
-const entries = await getCollection("blog");
+const entries = await getCollection("posts");
 const dateGroups = groupEntriesByDate(entries);
 ---
 
-<Layout
-    title={`${SITE_TITLE} — Thinking`}
-    description={SITE_DESCRIPTION}
->
+<Layout title={`${SITE_TITLE} — Thinking`} description={SITE_DESCRIPTION}>
     <section class="space-y-8 sm:space-y-9">
         <div class="space-y-6 mt-8">
             {
@@ -26,12 +23,9 @@ const dateGroups = groupEntriesByDate(entries);
                     >
                         <h2
                             id={`thinking-${group.dateSlug}`}
-                            class="font-mono text-sm font-normal text-muted-foreground"
+                            class="font-mono text-xs font-normal translate-y-1 text-primary"
                         >
-                            <a
-                                href={`/thinking/on/${group.dateSlug}/`}
-                                class="text-muted-foreground no-underline transition-colors duration-200 hover:text-primary"
-                            >
+                            <a href={`/thinking/on/${group.dateSlug}/`}>
                                 {formatThinkingDate(group.date)}
                             </a>
                         </h2>
@@ -39,17 +33,17 @@ const dateGroups = groupEntriesByDate(entries);
                         <div class="space-y-6">
                             {group.longEntries.map((entry) => (
                                 <article>
-                                    <a
-                                        href={getThinkingHref(entry)}
-                                        class="group block no-underline"
-                                    >
-                                        <h3 class="font-heading text-md font-semibold text-foreground underline decoration-dashed underline-offset-6 group-hover:underline-offset-7 transition-colors duration-200 group-hover:text-primary group-hover:decoration-wavy">
+                                    <h3 class="font-heading text-md font-semibold text-foreground">
+                                        <a
+                                            href={getThinkingHref(entry)}
+                                            class="text-link"
+                                        >
                                             {entry.data.title}
-                                        </h3>
-                                        <p class="mt-1 text-sm text-muted-foreground">
-                                            {entry.data.description}
-                                        </p>
-                                    </a>
+                                        </a>
+                                    </h3>
+                                    <p class="mt-1 text-sm text-muted-foreground">
+                                        {entry.data.description}
+                                    </p>
                                 </article>
                             ))}
 
@@ -62,7 +56,7 @@ const dateGroups = groupEntriesByDate(entries);
                                         >
                                             <a
                                                 href={getThinkingHref(entry)}
-                                                class="block font-heading text-base font-semibold text-foreground no-underline transition-colors duration-200 hover:text-primary"
+                                                class="text-link font-heading text-base font-semibold text-foreground"
                                             >
                                                 {entry.data.title}
                                             </a>

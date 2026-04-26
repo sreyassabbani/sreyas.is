@@ -26,8 +26,8 @@ pnpm-debug.log*
 # direnv
 .direnv
 
-# gh workflows use `sreyassabbani/blog`
-src/content/blog
+# gh workflows use `sreyassabbani/content`
+src/content
 
 # local backups for generated blog sync
 .blog-sync-backups/

@@ -192,19 +192,102 @@
 }
 
 @layer components {
+    .text-link {
+        color: inherit;
+        text-decoration-line: underline;
+        text-decoration-style: dotted;
+        text-decoration-color: color-mix(
+            in oklab,
+            var(--primary) 54%,
+            transparent
+        );
+        text-decoration-thickness: 1px;
+        text-underline-offset: 0.22em;
+        transition:
+            color 160ms ease,
+            text-decoration-color 160ms ease;
+    }
+
+    .text-link:hover {
+        color: var(--primary);
+        text-decoration-style: wavy;
+        text-decoration-color: var(--primary);
+    }
+
+    .blog-prose a:not([data-plain-link]) {
+        color: inherit !important;
+        font-weight: inherit !important;
+        text-decoration-line: underline !important;
+        text-decoration-style: dotted !important;
+        text-decoration-color: color-mix(
+            in oklab,
+            var(--primary) 54%,
+            transparent
+        ) !important;
+        text-decoration-thickness: 1px !important;
+        text-underline-offset: 0.22em !important;
+        transition:
+            color 160ms ease,
+            text-decoration-color 160ms ease;
+        overflow-wrap: anywhere;
+    }
+
+    .blog-prose a:not([data-plain-link]):hover {
+        color: var(--primary) !important;
+        text-decoration-style: wavy !important;
+        text-decoration-color: var(--primary) !important;
+    }
+
+    :where(:not(pre) > code) {
+        @apply rounded-md border border-border/70 bg-muted/75 px-1.5 py-0.5 font-mono text-[0.95em] font-normal text-primary;
+        color: oklch(0.58 0.12 247.5);
+        font-weight: 400;
+    }
+
+    .dark :where(:not(pre) > code) {
+        color: oklch(0.76 0.085 247.5);
+    }
+
+    .margin-note-anchor {
+        display: inline;
+    }
+
+    .margin-note {
+        @apply my-3 block rounded-lg border border-border/70 bg-secondary/45 px-3 py-2 text-sm leading-6 text-muted-foreground;
+    }
+
+    .margin-note__marker {
+        @apply mr-1 font-mono text-xs text-primary;
+    }
+
+    .margin-note > :first-child {
+        margin-top: 0;
+    }
+
+    .margin-note > :last-child {
+        margin-bottom: 0;
+    }
+
+    @media (min-width: 80rem) {
+        .margin-note {
+            float: right;
+            clear: right;
+            width: 15rem;
+            margin: 0 -17rem 0.5rem 1.5rem;
+            border: 0;
+            border-left: 1px solid
+                color-mix(in oklab, var(--border) 74%, transparent);
+            border-radius: 0;
+            background: transparent;
+            padding: 0 0 0 0.85rem;
+            font-size: 0.8rem;
+            line-height: 1.55;
+        }
+    }
+
     .blog-prose :not(pre) > code::before,
     .blog-prose :not(pre) > code::after {
         content: none !important;
-    }
-
-    .blog-prose :not(pre) > code {
-        @apply rounded-md border border-border/70 bg-muted/75 px-1.5 py-0.5 font-mono text-[0.95em] font-normal text-primary;
-        color: oklch(0.58 0.12 247.5) !important;
-        font-weight: 400 !important;
-    }
-
-    .dark .blog-prose :not(pre) > code {
-        color: oklch(0.76 0.085 247.5) !important;
     }
 
     .blog-prose pre {
@@ -269,6 +352,11 @@
         quotes: none;
     }
 
+    .blog-prose blockquote,
+    .blog-prose blockquote p {
+        color: var(--muted-foreground) !important;
+    }
+
     .blog-prose blockquote p:first-of-type::before,
     .blog-prose blockquote p:last-of-type::after {
         content: none !important;
@@ -283,11 +371,11 @@
     }
 
     .blog-prose blockquote p {
-        @apply m-0;
+        margin: 0 !important;
     }
 
     .blog-prose blockquote p + p {
-        @apply mt-3;
+        margin-top: 0.5rem !important;
     }
 
     .blog-prose table {

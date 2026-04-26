@@ -1,0 +1,14 @@
+---
+type Props = {
+    marker?: string;
+};
+
+const { marker } = Astro.props;
+---
+
+<span class="margin-note-anchor">
+    {marker && <span class="margin-note__marker">{marker}</span>}
+    <span class="margin-note">
+        <slot />
+    </span>
+</span>

@@ -4,7 +4,7 @@ import { formatThinkingDate, groupEntriesByDate } from "@/lib/thinking";
 import { SITE_TITLE } from "@/consts";
 import Layout from "@/layouts/Layout.astro";
 
-const dateGroups = groupEntriesByDate(await getCollection("blog"));
+const dateGroups = groupEntriesByDate(await getCollection("posts"));
 ---
 
 <Layout
@@ -16,7 +16,7 @@ const dateGroups = groupEntriesByDate(await getCollection("blog"));
         <header class="space-y-4 border-b border-border pb-6">
             <a
                 href="/thinking"
-                class="font-mono text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-primary"
+                class="text-link font-mono text-sm text-muted-foreground"
             >
                 /thinking
             </a>

@@ -1,13 +1,13 @@
 ---
 import BaseHead from "../components/BaseHead.astro";
-import Navigation, { type Props as NavProps } from "../components/Navigation.astro";
+import Navigation from "../components/Navigation.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 
 export type Props = {
-    title: string,
-    description: string,
-    variant?: "default" | "home" | "bare",
-    showNavigation?: boolean
+    title: string;
+    description: string;
+    variant?: "default" | "home" | "bare";
+    showNavigation?: boolean;
 };
 
 const {
@@ -40,7 +40,9 @@ const layouts = {
     },
 };
 
-const layout = !showNavigation ? layouts.bare : layouts[variant] ?? layouts.default;
+const layout = !showNavigation
+    ? layouts.bare
+    : (layouts[variant] ?? layouts.default);
 ---
 
 <html lang="en">

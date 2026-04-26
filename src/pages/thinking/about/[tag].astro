@@ -11,7 +11,7 @@ import { SITE_TITLE } from "@/consts";
 import Layout from "@/layouts/Layout.astro";
 
 export async function getStaticPaths() {
-    const entries = await getCollection("blog");
+    const entries = await getCollection("posts");
     return getAllTags(entries).map((tag) => ({
         params: { tag },
         props: {
@@ -33,7 +33,7 @@ const { tag, entries } = Astro.props;
         <header class="space-y-4 border-b border-border pb-6">
             <a
                 href="/thinking/about"
-                class="font-mono text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-primary"
+                class="text-link font-mono text-sm text-muted-foreground"
             >
                 /thinking/about
             </a>
@@ -51,23 +51,23 @@ const { tag, entries } = Astro.props;
                         <div class="space-y-1 font-mono text-xs text-muted-foreground">
                             <a
                                 href={`/thinking/on/${getDateSlug(entry.data.pubDate)}/`}
-                                class="text-muted-foreground no-underline transition-colors duration-200 hover:text-primary"
+                                class="text-link text-muted-foreground"
                             >
                                 {getDateSlug(entry.data.pubDate)}
                             </a>
                         </div>
                         <div>
-                            <a
-                                href={getThinkingHref(entry)}
-                                class="group block no-underline"
-                            >
-                                <h2 class="font-heading text-xl font-semibold leading-7 text-foreground underline decoration-dashed underline-offset-4 transition-colors duration-200 group-hover:text-primary group-hover:decoration-solid">
+                            <h2 class="font-heading text-xl font-semibold leading-7 text-foreground">
+                                <a
+                                    href={getThinkingHref(entry)}
+                                    class="text-link"
+                                >
                                     {entry.data.title}
-                                </h2>
-                                <p class="mt-1 text-sm leading-6 text-muted-foreground">
-                                    {entry.data.description}
-                                </p>
-                            </a>
+                                </a>
+                            </h2>
+                            <p class="mt-1 text-sm leading-6 text-muted-foreground">
+                                {entry.data.description}
+                            </p>
                         </div>
                     </article>
                 ))

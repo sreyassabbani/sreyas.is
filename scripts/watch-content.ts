@@ -2,18 +2,18 @@ import { type FSWatcher, watch } from "node:fs";
 import path from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import {
-    ensureMountedBlog,
+    ensureMountedContent,
     ignoredPathSegments,
-    parseMountBlogArgs,
+    parseMountContentArgs,
     pathExists,
     resolveSourcePath,
-} from "./mount-blog";
+} from "./mount-content";
 
 const root = process.cwd();
-const logPrefix = "[blog-watch]";
+const logPrefix = "[content-watch]";
 const args = process.argv.slice(2);
 const skipInitialSync = args.includes("--skip-initial-sync");
-const { includeUntracked } = parseMountBlogArgs(args);
+const { includeUntracked } = parseMountContentArgs(args);
 
 let watcher: FSWatcher | null = null;
 let watchedSourcePath: string | null = null;
@@ -50,7 +50,7 @@ async function syncMount() {
     syncInFlight = true;
 
     try {
-        await ensureMountedBlog({ includeUntracked, logPrefix });
+        await ensureMountedContent({ includeUntracked, logPrefix });
 
         const nextSourcePath = await resolveSourcePath();
         if (
@@ -84,7 +84,9 @@ async function waitForSourcePath() {
             return sourcePath;
         }
 
-        console.warn(`${logPrefix} waiting for blog source at ${sourcePath}`);
+        console.warn(
+            `${logPrefix} waiting for content source at ${sourcePath}`,
+        );
         await sleep(2000);
     }
 
@@ -147,10 +149,12 @@ async function shutdownAndExit() {
 
     if (includeUntracked) {
         try {
-            await ensureMountedBlog({ logPrefix: "[blog-watch:cleanup]" });
+            await ensureMountedContent({
+                logPrefix: "[content-watch:cleanup]",
+            });
         } catch (error) {
             console.error(
-                "[blog-watch:cleanup] failed to restore tracked-only mount",
+                "[content-watch:cleanup] failed to restore tracked-only mount",
                 error,
             );
             process.exit(1);
@@ -169,7 +173,7 @@ process.on("SIGTERM", () => {
 });
 
 if (!skipInitialSync) {
-    await ensureMountedBlog({ includeUntracked, logPrefix });
+    await ensureMountedContent({ includeUntracked, logPrefix });
 }
 
 await restartWatcher();

@@ -10,7 +10,7 @@ export const GET: APIRoute = async ({ site }) => {
     }
 
     const posts = sortByNewest(
-        (await getCollection("blog")).filter(isLongEntry),
+        (await getCollection("posts")).filter(isLongEntry),
     );
     return rss({
         title: SITE_TITLE,

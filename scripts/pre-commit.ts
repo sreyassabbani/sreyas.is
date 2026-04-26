@@ -1,14 +1,14 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import {
-    ensureMountedBlog,
+    ensureMountedContent,
     listTrackedSourceFiles,
     mountPath,
     pathExists,
     resolveSourcePath,
-} from "./mount-blog";
+} from "./mount-content";
 
-await ensureMountedBlog({
+await ensureMountedContent({
     backupExisting: true,
     logPrefix: "[pre-commit]",
 });
@@ -18,7 +18,7 @@ const trackedSourceFiles = (await pathExists(sourcePath))
     ? new Set(listTrackedSourceFiles(sourcePath))
     : new Set<string>();
 
-const stagedBlogPathsResult = spawnSync(
+const stagedContentPathsResult = spawnSync(
     "git",
     [
         "diff",
@@ -27,21 +27,22 @@ const stagedBlogPathsResult = spawnSync(
         "-z",
         "--diff-filter=ACMR",
         "--",
-        "src/content/blog",
+        "src/content",
     ],
     {
         encoding: "utf8",
     },
 );
 
-if (stagedBlogPathsResult.status !== 0) {
-    const errorOutput = stagedBlogPathsResult.stderr.trim();
+if (stagedContentPathsResult.status !== 0) {
+    const errorOutput = stagedContentPathsResult.stderr.trim();
     throw new Error(
-        errorOutput || "failed to inspect staged blog files in the site repo",
+        errorOutput ||
+            "failed to inspect staged content files in the site repo",
     );
 }
 
-const invalidStagedPaths = stagedBlogPathsResult.stdout
+const invalidStagedPaths = stagedContentPathsResult.stdout
     .split("\0")
     .filter(Boolean)
     .map((stagedPath) =>
@@ -53,7 +54,7 @@ const invalidStagedPaths = stagedBlogPathsResult.stdout
 
 if (invalidStagedPaths.length > 0) {
     console.error(
-        "[pre-commit] refusing commit because src/content/blog has staged files that are not tracked in the blog repo:",
+        "[pre-commit] refusing commit because src/content has staged files that are not tracked in the content repo:",
     );
 
     for (const invalidStagedPath of invalidStagedPaths) {

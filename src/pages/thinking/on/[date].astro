@@ -9,12 +9,12 @@ import { SITE_TITLE } from "@/consts";
 import Layout from "@/layouts/Layout.astro";
 
 type RenderedShortEntry = {
-    entry: CollectionEntry<"blog">;
+    entry: CollectionEntry<"posts">;
     Content: Awaited<ReturnType<typeof render>>["Content"];
 };
 
 export async function getStaticPaths() {
-    const groups = groupEntriesByDate(await getCollection("blog"));
+    const groups = groupEntriesByDate(await getCollection("posts"));
     return groups.map((group) => ({
         params: { date: group.dateSlug },
         props: group,
@@ -39,7 +39,7 @@ const renderedShortEntries: RenderedShortEntry[] = await Promise.all(
         <header class="space-y-4 border-b border-border pb-6">
             <a
                 href="/thinking/on"
-                class="font-mono text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-primary"
+                class="text-link font-mono text-sm text-muted-foreground"
             >
                 /thinking/on
             </a>
@@ -57,17 +57,17 @@ const renderedShortEntries: RenderedShortEntry[] = await Promise.all(
                     <div class="space-y-4">
                         {longEntries.map((entry) => (
                             <article class="border-b border-border pb-5 last:border-0">
-                                <a
-                                    href={getThinkingHref(entry)}
-                                    class="group block no-underline"
-                                >
-                                    <h3 class="font-heading text-2xl font-semibold leading-8 text-foreground underline decoration-dashed underline-offset-4 transition-colors duration-200 group-hover:text-primary group-hover:decoration-solid">
+                                <h3 class="font-heading text-2xl font-semibold leading-8 text-foreground">
+                                    <a
+                                        href={getThinkingHref(entry)}
+                                        class="text-link"
+                                    >
                                         {entry.data.title}
-                                    </h3>
-                                    <p class="mt-2 text-muted-foreground">
-                                        {entry.data.description}
-                                    </p>
-                                </a>
+                                    </a>
+                                </h3>
+                                <p class="mt-2 text-muted-foreground">
+                                    {entry.data.description}
+                                </p>
                             </article>
                         ))}
                     </div>
@@ -86,7 +86,7 @@ const renderedShortEntries: RenderedShortEntry[] = await Promise.all(
                                         {entry.data.title}
                                     </h3>
                                 </header>
-                                <div class="blog-prose prose prose-neutral dark:prose-invert max-w-none text-sm leading-7 text-foreground prose-p:my-0 prose-p:mb-3 prose-a:text-primary prose-a:underline prose-a:underline-offset-4">
+                                <div class="blog-prose prose prose-neutral dark:prose-invert max-w-none text-sm leading-7 text-foreground prose-p:my-0 prose-p:mb-3">
                                     <Content />
                                 </div>
                             </article>

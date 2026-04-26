@@ -1,13 +1,13 @@
 import { type ChildProcess, spawn } from "node:child_process";
 import {
-    ensureMountedBlog,
-    parseMountBlogArgs,
+    ensureMountedContent,
+    parseMountContentArgs,
     showUntrackedFlag,
-} from "./mount-blog";
+} from "./mount-content";
 
 const root = process.cwd();
 const args = process.argv.slice(2);
-const { includeUntracked } = parseMountBlogArgs(args);
+const { includeUntracked } = parseMountContentArgs(args);
 const astroArgs = args.filter((arg) => arg !== showUntrackedFlag);
 
 function spawnProcess(
@@ -44,7 +44,7 @@ const terminate = (
     }
 };
 
-await ensureMountedBlog({ includeUntracked });
+await ensureMountedContent({ includeUntracked });
 
 const watchArgs = ["--skip-initial-sync"];
 if (includeUntracked) {
@@ -54,7 +54,7 @@ if (includeUntracked) {
 const watchProcess = spawnProcess([
     process.execPath,
     "--bun",
-    "./scripts/watch-blog.ts",
+    "./scripts/watch-content.ts",
     ...watchArgs,
 ]);
 
@@ -85,7 +85,7 @@ async function shutdown(exitCode = 0, signal: NodeJS.Signals = "SIGTERM") {
 
     if (includeUntracked) {
         try {
-            await ensureMountedBlog({ logPrefix: "[dev:cleanup]" });
+            await ensureMountedContent({ logPrefix: "[dev:cleanup]" });
         } catch (error) {
             console.error(
                 "[dev:cleanup] failed to restore tracked-only mount",

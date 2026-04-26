@@ -1,6 +1,6 @@
 import type { CollectionEntry } from "astro:content";
 
-export type ThinkingEntry = CollectionEntry<"blog">;
+export type ThinkingEntry = CollectionEntry<"posts">;
 export type ThinkingType = ThinkingEntry["data"]["type"];
 
 export const thinkingRoot = "/thinking";
