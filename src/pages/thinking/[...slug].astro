@@ -1,6 +1,6 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
-import BlogPost from "@/layouts/BlogPost.astro";
+import ContentPost from "@/layouts/ContentPost.astro";
 import { isLongEntry } from "@/lib/thinking";
 
 export async function getStaticPaths() {
@@ -16,6 +16,6 @@ const post = Astro.props;
 const { Content, headings } = await render(post);
 ---
 
-<BlogPost {...post.data} headings={headings}>
+<ContentPost {...post.data} headings={headings}>
     <Content />
-</BlogPost>
+</ContentPost>

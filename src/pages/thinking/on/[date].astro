@@ -7,6 +7,7 @@ import {
 } from "@/lib/thinking";
 import { SITE_TITLE } from "@/consts";
 import Layout from "@/layouts/Layout.astro";
+import { shortContentProseClass } from "@/lib/content-prose";
 
 type RenderedShortEntry = {
     entry: CollectionEntry<"posts">;
@@ -86,7 +87,7 @@ const renderedShortEntries: RenderedShortEntry[] = await Promise.all(
                                         {entry.data.title}
                                     </h3>
                                 </header>
-                                <div class="blog-prose prose prose-neutral dark:prose-invert max-w-none text-sm leading-7 text-foreground prose-p:my-0 prose-p:mb-3">
+                                <div class={shortContentProseClass}>
                                     <Content />
                                 </div>
                             </article>

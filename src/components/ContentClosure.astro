@@ -5,51 +5,55 @@ interface Props {
 }
 
 const { title, initiallyOpen = false } = Astro.props;
-const panelId = `blog-closure-${Math.random().toString(36).slice(2, 10)}`;
+const panelId = `content-closure-${Math.random().toString(36).slice(2, 10)}`;
 ---
 
 <div
-    class="blog-closure"
-    data-blog-closure
+    class="content-closure"
+    data-content-closure
     data-open={initiallyOpen ? "true" : "false"}
 >
     <button
         type="button"
-        class="blog-closure__toggle"
+        class="content-closure__toggle"
         aria-controls={panelId}
         aria-expanded={initiallyOpen ? "true" : "false"}
-        data-blog-closure-button
+        data-content-closure-button
     >
-        <span class="blog-closure__title">{title}</span>
-        <span class="blog-closure__status" data-blog-closure-status>
+        <span class="content-closure__title">{title}</span>
+        <span class="content-closure__status" data-content-closure-status>
             {initiallyOpen ? "hide" : "show"}
         </span>
     </button>
 
     <div
         id={panelId}
-        class="blog-closure__panel"
-        data-blog-closure-panel
+        class="content-closure__panel"
+        data-content-closure-panel
         aria-hidden={initiallyOpen ? "false" : "true"}
         inert={initiallyOpen ? undefined : true}
     >
-        <div class="blog-closure__content">
+        <div class="content-closure__content">
             <slot />
         </div>
     </div>
 </div>
 
 <script>
-    function initBlogClosures() {
-        const closures = document.querySelectorAll("[data-blog-closure]");
+    function initContentClosures() {
+        const closures = document.querySelectorAll("[data-content-closure]");
 
         closures.forEach((closure) => {
             if (!(closure instanceof HTMLElement)) return;
             if (closure.dataset.closureBound === "true") return;
 
-            const button = closure.querySelector("[data-blog-closure-button]");
-            const panel = closure.querySelector("[data-blog-closure-panel]");
-            const status = closure.querySelector("[data-blog-closure-status]");
+            const button = closure.querySelector(
+                "[data-content-closure-button]",
+            );
+            const panel = closure.querySelector("[data-content-closure-panel]");
+            const status = closure.querySelector(
+                "[data-content-closure-status]",
+            );
 
             if (
                 !(button instanceof HTMLButtonElement) ||
@@ -76,6 +80,6 @@ const panelId = `blog-closure-${Math.random().toString(36).slice(2, 10)}`;
         });
     }
 
-    document.addEventListener("DOMContentLoaded", initBlogClosures);
-    document.addEventListener("astro:page-load", initBlogClosures);
+    document.addEventListener("DOMContentLoaded", initContentClosures);
+    document.addEventListener("astro:page-load", initContentClosures);
 </script>

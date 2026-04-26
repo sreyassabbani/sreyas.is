@@ -3,12 +3,13 @@ import { Image } from "astro:assets";
 import type { MarkdownHeading } from "astro";
 import type { CollectionEntry } from "astro:content";
 import BaseHead from "@/components/BaseHead.astro";
-import BlogPostInlineToc from "@/components/BlogPostInlineToc.astro";
-import BlogPostRail from "@/components/BlogPostRail.astro";
+import ContentPostInlineToc from "@/components/ContentPostInlineToc.astro";
+import ContentPostRail from "@/components/ContentPostRail.astro";
 import CopyCodeButton from "@/components/CopyCodeButton.astro";
 import Footer from "@/components/Footer.astro";
 import FormattedDate from "@/components/FormattedDate.astro";
-import { getInlineTocGroups, getRailTocGroups } from "@/lib/blog-toc";
+import { contentProseClass } from "@/lib/content-prose";
+import { getInlineTocGroups, getRailTocGroups } from "@/lib/content-toc";
 import { getTagHref } from "@/lib/thinking";
 
 type Props = CollectionEntry<"posts">["data"] & {
@@ -22,8 +23,6 @@ const inlineTocGroups = getInlineTocGroups(headings);
 const railTocGroups = getRailTocGroups(headings);
 
 const articleContainerClass = "mx-auto w-full max-w-3xl";
-const proseClass =
-    "blog-prose prose prose-neutral dark:prose-invert max-w-none text-[0.98rem] leading-7 text-foreground sm:text-base sm:leading-8 prose-p:my-0 prose-p:mb-4 prose-headings:font-heading prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground prose-h1:mt-16 prose-h1:mb-5 prose-h1:border-b prose-h1:border-border prose-h1:pb-3 prose-h1:text-3xl sm:prose-h1:mt-20 sm:prose-h1:text-4xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-border prose-h2:pb-2 prose-h2:text-2xl sm:prose-h2:mt-14 sm:prose-h2:text-3xl prose-h3:mt-9 prose-h3:mb-3 prose-h3:text-[1.45rem] sm:prose-h3:mt-10 sm:prose-h3:text-2xl prose-h4:mt-7 prose-h4:mb-3 prose-h4:text-lg sm:prose-h4:text-xl prose-strong:text-foreground prose-strong:font-semibold prose-ul:my-3 prose-ul:list-disc prose-ul:list-outside prose-ul:pl-5 sm:prose-ul:pl-6 prose-ol:my-3 prose-ol:list-decimal prose-ol:list-outside prose-ol:pl-5 sm:prose-ol:pl-6 prose-li:my-0.5 prose-li:marker:text-muted-foreground prose-hr:my-8 prose-hr:border-border [&_h1[id]]:scroll-mt-24 [&_h2[id]]:scroll-mt-24 [&_h3[id]]:scroll-mt-24 [&_h4[id]]:scroll-mt-24 [&_h5[id]]:scroll-mt-24 [&_h6[id]]:scroll-mt-24 [&_img]:my-6 [&_img]:rounded-xl";
 ---
 
 <html lang="en">
@@ -35,7 +34,7 @@ const proseClass =
         id="top"
         class="min-h-screen overflow-x-hidden bg-background text-foreground"
     >
-        <BlogPostRail groups={railTocGroups} />
+        <ContentPostRail groups={railTocGroups} />
 
         <div
             class="mx-auto w-full max-w-4xl px-4 pb-14 pt-4 sm:px-6 sm:pb-16 sm:pt-6"
@@ -108,9 +107,9 @@ const proseClass =
                         }
                     </header>
 
-                    <BlogPostInlineToc groups={inlineTocGroups} />
+                    <ContentPostInlineToc groups={inlineTocGroups} />
 
-                    <div class={proseClass}>
+                    <div class={contentProseClass}>
                         <slot />
                     </div>
                 </article>
