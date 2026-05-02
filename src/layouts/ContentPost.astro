@@ -16,11 +16,20 @@ type Props = CollectionEntry<"posts">["data"] & {
     headings: MarkdownHeading[];
 };
 
-const { title, description, pubDate, updatedDate, heroImage, tags, headings } =
-    Astro.props as Props;
+const {
+    title,
+    description,
+    pubDate,
+    updatedDate,
+    heroImage,
+    tags,
+    toc,
+    headings,
+} = Astro.props as Props;
 
-const inlineTocGroups = getInlineTocGroups(headings);
-const railTocGroups = getRailTocGroups(headings);
+const showToc = toc !== false;
+const inlineTocGroups = showToc ? getInlineTocGroups(headings) : [];
+const railTocGroups = showToc ? getRailTocGroups(headings) : [];
 
 const articleContainerClass = "mx-auto w-full max-w-3xl";
 ---
@@ -34,7 +43,7 @@ const articleContainerClass = "mx-auto w-full max-w-3xl";
         id="top"
         class="min-h-screen overflow-x-hidden bg-background text-foreground"
     >
-        <ContentPostRail groups={railTocGroups} />
+        {showToc && <ContentPostRail groups={railTocGroups} />}
 
         <div
             class="mx-auto w-full max-w-4xl px-4 pb-14 pt-4 sm:px-6 sm:pb-16 sm:pt-6"
@@ -44,7 +53,7 @@ const articleContainerClass = "mx-auto w-full max-w-3xl";
                     href="/thinking"
                     class="inline-flex items-center rounded-full text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-foreground"
                 >
-                    Back to thinking
+                    Back
                 </a>
 
                 <article class="mt-6">
@@ -107,7 +116,11 @@ const articleContainerClass = "mx-auto w-full max-w-3xl";
                         }
                     </header>
 
-                    <ContentPostInlineToc groups={inlineTocGroups} />
+                    {
+                        showToc && (
+                            <ContentPostInlineToc groups={inlineTocGroups} />
+                        )
+                    }
 
                     <div class={contentProseClass}>
                         <slot />
