@@ -1,0 +1,99 @@
+"use client";
+
+import * as React from "react";
+
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectSeparator,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import type { NavigationItemGroup } from "@/lib/navigation";
+
+function isCurrent(pathname: string, href: string) {
+    return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+type Props = {
+    pathname: string;
+    groups: NavigationItemGroup[];
+    ariaLabel: string;
+    fallbackLabel?: string;
+    label?: string;
+    contentClassName?: string;
+};
+
+export function NavigationSelect({
+    pathname,
+    groups,
+    ariaLabel,
+    fallbackLabel = "Navigate",
+    label,
+    contentClassName = "w-36 min-w-36",
+}: Props) {
+    const items = React.useMemo(
+        () => groups.flatMap((group) => group.items),
+        [groups],
+    );
+    const currentItem = items.find((item) => isCurrent(pathname, item.href));
+    const [value, setValue] = React.useState<string | null>(
+        currentItem?.href ?? items[0]?.href,
+    );
+    const currentLabel = label ?? currentItem?.label ?? fallbackLabel;
+
+    React.useEffect(() => {
+        setValue(currentItem?.href ?? items[0]?.href);
+    }, [currentItem, items]);
+
+    return (
+        <Select
+            items={items.map((item) => ({
+                label: item.label,
+                value: item.href,
+            }))}
+            value={value}
+            onValueChange={(nextHref) => {
+                setValue(nextHref);
+
+                if (nextHref && nextHref !== pathname) {
+                    window.location.assign(nextHref);
+                }
+            }}
+        >
+            <div className="flex -translate-y-1 items-center gap-1">
+                <span className="text-sm text-foreground">{currentLabel}</span>
+                <SelectTrigger
+                    aria-label={ariaLabel}
+                    className="-mr-1 flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-muted-foreground shadow-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-transparent dark:hover:bg-muted"
+                >
+                    <SelectValue className="sr-only" />
+                </SelectTrigger>
+            </div>
+            <SelectContent
+                align="end"
+                alignItemWithTrigger={false}
+                className={contentClassName}
+            >
+                <SelectGroup>
+                    {groups.map((group, groupIndex) => (
+                        <React.Fragment
+                            key={group.items.map((item) => item.href).join("|")}
+                        >
+                            {groupIndex > 0 && (
+                                <SelectSeparator className="my-1" />
+                            )}
+                            {group.items.map((item) => (
+                                <SelectItem key={item.href} value={item.href}>
+                                    {item.label}
+                                </SelectItem>
+                            ))}
+                        </React.Fragment>
+                    ))}
+                </SelectGroup>
+            </SelectContent>
+        </Select>
+    );
+}

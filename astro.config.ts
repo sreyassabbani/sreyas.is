@@ -23,6 +23,9 @@ export default defineConfig({
     },
     vite: {
         plugins: [tailwindcss()],
+        resolve: {
+            dedupe: ["react", "react-dom"],
+        },
         ssr: {
             // Ensure KaTeX CSS is bundled by Vite instead of being loaded directly by Node.
             noExternal: ["katex"],
