@@ -2,6 +2,10 @@ import type { CollectionEntry } from "astro:content";
 
 export type ThinkingEntry = CollectionEntry<"posts">;
 export type ThinkingType = ThinkingEntry["data"]["type"];
+export type ThinkingTopic = {
+    tag: string;
+    entries: ThinkingEntry[];
+};
 
 export const thinkingRoot = "/thinking";
 
@@ -76,6 +80,16 @@ export function getEntriesForTag(entries: ThinkingEntry[], tagSlug: string) {
             entry.data.tags.some((tag) => normalizeTag(tag) === tagSlug),
         ),
     );
+}
+
+export function getThinkingTopics(entries: ThinkingEntry[]) {
+    return getAllTags(entries)
+        .map((tag) => ({ tag, entries: getEntriesForTag(entries, tag) }))
+        .sort(
+            (a, b) =>
+                b.entries.length - a.entries.length ||
+                formatTag(a.tag).localeCompare(formatTag(b.tag)),
+        );
 }
 
 export function groupEntriesByDate(entries: ThinkingEntry[]) {

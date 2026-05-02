@@ -1,0 +1,118 @@
+---
+import type { CollectionEntry } from "astro:content";
+import { render } from "astro:content";
+import { shortContentProseClass } from "@/lib/content-prose";
+import {
+    formatThinkingDate,
+    getThinkingHref,
+    type ThinkingEntry,
+} from "@/lib/thinking";
+
+type ThinkingEntryGroup = {
+    dateSlug: string;
+    date: Date;
+    longEntries: ThinkingEntry[];
+    shortEntries: ThinkingEntry[];
+};
+
+type RenderedShortEntry = {
+    entry: CollectionEntry<"posts">;
+    Content: Awaited<ReturnType<typeof render>>["Content"];
+};
+
+type Props = {
+    groups: ThinkingEntryGroup[];
+    renderedShortEntries?: RenderedShortEntry[];
+};
+
+const { groups, renderedShortEntries = [] } = Astro.props as Props;
+const renderedShortEntryById = new Map(
+    renderedShortEntries.map(({ entry, Content }) => [entry.id, Content]),
+);
+---
+
+<div class="space-y-8 sm:space-y-9">
+    {
+        groups.map((group) => (
+            <section
+                class="grid gap-3 pb-7 last:border-0 sm:grid-cols-[8rem_1fr]"
+                aria-labelledby={`thinking-${group.dateSlug}`}
+            >
+                <h2
+                    id={`thinking-${group.dateSlug}`}
+                    class="translate-y-1 font-mono text-xs font-normal text-primary"
+                >
+                    <a href={`/thinking/on/${group.dateSlug}/`}>
+                        {formatThinkingDate(group.date)}
+                    </a>
+                </h2>
+
+                <div class="space-y-6">
+                    {group.longEntries.map((entry) => (
+                        <article>
+                            <h3 class="font-heading text-md font-semibold text-foreground">
+                                <a
+                                    href={getThinkingHref(entry)}
+                                    class="text-link"
+                                >
+                                    {entry.data.title}
+                                </a>
+                            </h3>
+                            <p class="mt-1 text-sm text-muted-foreground">
+                                {entry.data.description}
+                            </p>
+                        </article>
+                    ))}
+
+                    {group.shortEntries.length > 0 && (
+                        <div class="space-y-3 border-l border-border pl-4">
+                            {group.shortEntries.map((entry) => {
+                                const Content = renderedShortEntryById.get(
+                                    entry.id,
+                                );
+
+                                return (
+                                    <article
+                                        id={entry.id}
+                                        class="scroll-mt-24 text-sm leading-6 text-muted-foreground"
+                                    >
+                                        {Content ? (
+                                            <>
+                                                <header class="mb-2">
+                                                    <h3 class="font-heading text-base font-semibold text-foreground">
+                                                        {entry.data.title}
+                                                    </h3>
+                                                </header>
+                                                <div
+                                                    class={
+                                                        shortContentProseClass
+                                                    }
+                                                >
+                                                    <Content />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <a
+                                                    href={getThinkingHref(
+                                                        entry,
+                                                    )}
+                                                    class="text-link font-heading text-base font-semibold text-foreground"
+                                                >
+                                                    {entry.data.title}
+                                                </a>
+                                                <p class="mt-1">
+                                                    {entry.data.description}
+                                                </p>
+                                            </>
+                                        )}
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
+            </section>
+        ))
+    }
+</div>

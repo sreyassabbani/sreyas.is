@@ -1,11 +1,8 @@
 ---
 import { getCollection } from "astro:content";
-import {
-    formatThinkingDate,
-    getThinkingHref,
-    groupEntriesByDate,
-} from "@/lib/thinking";
+import { groupEntriesByDate } from "@/lib/thinking";
 import { SITE_DESCRIPTION, SITE_TITLE } from "@/consts";
+import ThinkingEntryList from "@/components/ThinkingEntryList.astro";
 import Layout from "@/layouts/Layout.astro";
 
 const entries = await getCollection("posts");
@@ -15,62 +12,7 @@ const dateGroups = groupEntriesByDate(entries);
 <Layout title={`${SITE_TITLE} — Thinking`} description={SITE_DESCRIPTION}>
     <section class="space-y-8 sm:space-y-9">
         <div class="space-y-6 mt-8">
-            {
-                dateGroups.map((group) => (
-                    <section
-                        class="grid gap-3 pb-7 last:border-0 sm:grid-cols-[8rem_1fr]"
-                        aria-labelledby={`thinking-${group.dateSlug}`}
-                    >
-                        <h2
-                            id={`thinking-${group.dateSlug}`}
-                            class="font-mono text-xs font-normal translate-y-1 text-primary"
-                        >
-                            <a href={`/thinking/on/${group.dateSlug}/`}>
-                                {formatThinkingDate(group.date)}
-                            </a>
-                        </h2>
-
-                        <div class="space-y-6">
-                            {group.longEntries.map((entry) => (
-                                <article>
-                                    <h3 class="font-heading text-md font-semibold text-foreground">
-                                        <a
-                                            href={getThinkingHref(entry)}
-                                            class="text-link"
-                                        >
-                                            {entry.data.title}
-                                        </a>
-                                    </h3>
-                                    <p class="mt-1 text-sm text-muted-foreground">
-                                        {entry.data.description}
-                                    </p>
-                                </article>
-                            ))}
-
-                            {group.shortEntries.length > 0 && (
-                                <div class="space-y-3 border-l border-border pl-4">
-                                    {group.shortEntries.map((entry) => (
-                                        <article
-                                            id={entry.id}
-                                            class="text-sm leading-6 text-muted-foreground"
-                                        >
-                                            <a
-                                                href={getThinkingHref(entry)}
-                                                class="text-link font-heading text-base font-semibold text-foreground"
-                                            >
-                                                {entry.data.title}
-                                            </a>
-                                            <p class="mt-1">
-                                                {entry.data.description}
-                                            </p>
-                                        </article>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </section>
-                ))
-            }
+            <ThinkingEntryList groups={dateGroups} />
         </div>
     </section>
 </Layout>

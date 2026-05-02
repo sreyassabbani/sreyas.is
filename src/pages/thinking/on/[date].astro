@@ -1,13 +1,9 @@
 ---
 import { type CollectionEntry, getCollection, render } from "astro:content";
-import {
-    formatThinkingDate,
-    getThinkingHref,
-    groupEntriesByDate,
-} from "@/lib/thinking";
+import { formatThinkingDate, groupEntriesByDate } from "@/lib/thinking";
 import { SITE_TITLE } from "@/consts";
+import ThinkingEntryList from "@/components/ThinkingEntryList.astro";
 import Layout from "@/layouts/Layout.astro";
-import { shortContentProseClass } from "@/lib/content-prose";
 
 type RenderedShortEntry = {
     entry: CollectionEntry<"posts">;
@@ -22,7 +18,8 @@ export async function getStaticPaths() {
     }));
 }
 
-const { date, dateSlug, longEntries, shortEntries } = Astro.props;
+const { date, shortEntries } = Astro.props;
+const dateGroups = [Astro.props];
 const renderedShortEntries: RenderedShortEntry[] = await Promise.all(
     shortEntries.map(async (entry) => ({
         entry,
@@ -34,67 +31,12 @@ const renderedShortEntries: RenderedShortEntry[] = await Promise.all(
 <Layout
     title={`${SITE_TITLE} — Thinking on ${formatThinkingDate(date)}`}
     description={`Thinking from ${formatThinkingDate(date)}.`}
-    showNavigation={false}
 >
-    <section class="space-y-8">
-        <header class="space-y-4 border-b border-border pb-6">
-            <a
-                href="/thinking/on"
-                class="text-link font-mono text-sm text-muted-foreground"
-            >
-                /thinking/on
-            </a>
-            <p class="font-mono text-xs text-muted-foreground">{dateSlug}</p>
-            <h1
-                class="text-balance font-heading text-3xl font-semibold tracking-tight text-foreground"
-            >
-                {formatThinkingDate(date)}
-            </h1>
-        </header>
-
-        {
-            longEntries.length > 0 && (
-                <section class="space-y-4" aria-label="Posts">
-                    <div class="space-y-4">
-                        {longEntries.map((entry) => (
-                            <article class="border-b border-border pb-5 last:border-0">
-                                <h3 class="font-heading text-2xl font-semibold leading-8 text-foreground">
-                                    <a
-                                        href={getThinkingHref(entry)}
-                                        class="text-link"
-                                    >
-                                        {entry.data.title}
-                                    </a>
-                                </h3>
-                                <p class="mt-2 text-muted-foreground">
-                                    {entry.data.description}
-                                </p>
-                            </article>
-                        ))}
-                    </div>
-                </section>
-            )
-        }
-
-        {
-            renderedShortEntries.length > 0 && (
-                <section class="space-y-5" aria-label="Notes">
-                    <div class="space-y-6 border-l border-border pl-4 sm:pl-5">
-                        {renderedShortEntries.map(({ entry, Content }) => (
-                            <article id={entry.id} class="scroll-mt-24">
-                                <header class="mb-2">
-                                    <h3 class="font-heading text-lg font-semibold text-foreground">
-                                        {entry.data.title}
-                                    </h3>
-                                </header>
-                                <div class={shortContentProseClass}>
-                                    <Content />
-                                </div>
-                            </article>
-                        ))}
-                    </div>
-                </section>
-            )
-        }
+    <section class="mt-8 space-y-8">
+        <h1 class="sr-only">Thinking on {formatThinkingDate(date)}</h1>
+        <ThinkingEntryList
+            groups={dateGroups}
+            renderedShortEntries={renderedShortEntries}
+        />
     </section>
 </Layout>

@@ -1,0 +1,43 @@
+---
+import { formatTag, getTagHref, type ThinkingTopic } from "@/lib/thinking";
+
+type Props = {
+    topics: ThinkingTopic[];
+};
+
+const { topics } = Astro.props as Props;
+---
+
+<section class="space-y-4" aria-labelledby="thinking-topics">
+    <div
+        class="flex items-center justify-between gap-4 border-b border-border pb-3"
+    >
+        <h1
+            id="thinking-topics"
+            class="font-heading text-2xl font-semibold tracking-tight text-foreground"
+        >
+            Topics
+        </h1>
+    </div>
+
+    <div class="grid gap-3 sm:grid-cols-2">
+        {
+            topics.map((topic) => (
+                <a
+                    href={getTagHref(topic.tag)}
+                    class="group/topic grid grid-cols-[1fr_auto] items-center gap-3 rounded-lg border border-border bg-card/30 px-4 py-3 no-underline transition-colors duration-200 hover:border-primary/40 hover:bg-secondary/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                    <span class="min-w-0 truncate font-heading text-lg font-semibold leading-7 text-foreground">
+                        {formatTag(topic.tag).toLowerCase()}
+                    </span>
+                    <span
+                        class="font-mono text-xs text-muted-foreground transition-colors duration-200 group-hover/topic:text-primary"
+                        aria-label={`${topic.entries.length} entries`}
+                    >
+                        {topic.entries.length}
+                    </span>
+                </a>
+            ))
+        }
+    </div>
+</section>

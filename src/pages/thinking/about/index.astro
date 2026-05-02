@@ -1,66 +1,18 @@
 ---
+import { getCollection } from "astro:content";
 import { SITE_TITLE } from "@/consts";
+import ThinkingTopicGrid from "@/components/ThinkingTopicGrid.astro";
+import { getThinkingTopics } from "@/lib/thinking";
 import Layout from "@/layouts/Layout.astro";
+
+const topics = getThinkingTopics(await getCollection("posts"));
 ---
 
 <Layout
     title={`${SITE_TITLE} — Thinking by topic`}
     description="Thinking grouped by topic."
-    showNavigation={false}
 >
-    <section class="space-y-8">
-        <header class="space-y-4 border-b border-border pb-6">
-            <a
-                href="/thinking"
-                class="text-link font-mono text-sm text-muted-foreground"
-            >
-                /thinking
-            </a>
-            <h1
-                class="font-brand text-[clamp(2rem,9vw,4.25rem)] font-semibold leading-none tracking-tight text-foreground"
-            >
-                /about
-            </h1>
-        </header>
-
-        <form class="max-w-md" data-topic-form>
-            <div class="flex border-b border-border">
-                <span class="py-2 font-mono text-sm text-muted-foreground">
-                    /thinking/about/
-                </span>
-                <input
-                    id="topic"
-                    name="topic"
-                    aria-label="Topic"
-                    autocomplete="off"
-                    class="min-w-0 flex-1 bg-transparent py-2 font-mono text-sm text-foreground outline-none placeholder:text-muted-foreground"
-                    placeholder="jacobians"
-                />
-            </div>
-        </form>
+    <section class="mt-8">
+        <ThinkingTopicGrid topics={topics} />
     </section>
-
-    <script>
-        const form = document.querySelector("[data-topic-form]");
-        const input = document.querySelector("#topic");
-
-        form?.addEventListener("submit", (event) => {
-            event.preventDefault();
-
-            if (!(input instanceof HTMLInputElement)) {
-                return;
-            }
-
-            const topic = input.value
-                .trim()
-                .toLowerCase()
-                .replaceAll("&", "and")
-                .replaceAll(/[^a-z0-9]+/g, "-")
-                .replaceAll(/^-|-$/g, "");
-
-            if (topic) {
-                window.location.href = `/thinking/about/${topic}/`;
-            }
-        });
-    </script>
 </Layout>
