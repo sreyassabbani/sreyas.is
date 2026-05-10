@@ -1,6 +1,12 @@
 "use client";
 
-import { CalendarDaysIcon, FunnelIcon, TagsIcon, XIcon } from "lucide-react";
+import {
+    CalendarDaysIcon,
+    FunnelIcon,
+    type LucideIcon,
+    TagsIcon,
+    XIcon,
+} from "lucide-react";
 import * as React from "react";
 
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -16,7 +22,14 @@ type Props = {
     className?: string;
 };
 
-const options = [
+type FilterOption = Readonly<{
+    href: string;
+    label: string;
+    icon: LucideIcon;
+    activePath: string;
+}>;
+
+const options: readonly FilterOption[] = [
     {
         href: "/thinking/on/",
         label: "Date",
@@ -39,12 +52,14 @@ const controlChromeClass = cn(
 export function ThinkingFilterControl({ pathname, className }: Props) {
     const [expanded, setExpanded] = React.useState(false);
     const [resetHot, setResetHot] = React.useState(false);
-    const isThinking = pathname.startsWith("/thinking");
-    const isActive =
+    const isThinking: boolean = pathname.startsWith("/thinking");
+    const isActive: boolean =
         isThinking &&
-        options.some((option) => pathname.startsWith(option.activePath));
+        options.some((option: FilterOption): boolean =>
+            pathname.startsWith(option.activePath),
+        );
 
-    const expand = () => {
+    const expand = (): void => {
         if (!isActive) {
             return;
         }
@@ -52,7 +67,7 @@ export function ThinkingFilterControl({ pathname, className }: Props) {
         setExpanded(true);
     };
 
-    const collapse = () => {
+    const collapse = (): void => {
         setExpanded(false);
         setResetHot(false);
     };
@@ -67,7 +82,9 @@ export function ThinkingFilterControl({ pathname, className }: Props) {
                 onMouseEnter={expand}
                 onMouseLeave={collapse}
                 onFocusCapture={expand}
-                onBlurCapture={(event) => {
+                onBlurCapture={(
+                    event: React.FocusEvent<HTMLFieldSetElement>,
+                ): void => {
                     if (!event.currentTarget.contains(event.relatedTarget)) {
                         collapse();
                     }
@@ -134,9 +151,11 @@ export function ThinkingFilterControl({ pathname, className }: Props) {
                 sideOffset={8}
                 className="w-36 gap-1 p-1"
             >
-                {options.map((option) => {
-                    const Icon = option.icon;
-                    const optionActive = pathname.startsWith(option.activePath);
+                {options.map((option: FilterOption) => {
+                    const Icon: LucideIcon = option.icon;
+                    const optionActive: boolean = pathname.startsWith(
+                        option.activePath,
+                    );
 
                     return (
                         <a
