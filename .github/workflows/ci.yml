@@ -10,9 +10,21 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout site repo
+        uses: actions/checkout@v4
+        with:
+          path: site
+      - name: Checkout content repo
+        uses: actions/checkout@v4
+        with:
+          repository: sreyassabbani/content
+          path: content
       - uses: oven-sh/setup-bun@v1
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
+        working-directory: ./site
       - run: bun run ci
+        working-directory: ./site
+        env:
+          CONTENT_DIR: ../content
