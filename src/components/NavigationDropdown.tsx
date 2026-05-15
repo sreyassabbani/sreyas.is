@@ -57,7 +57,7 @@ export function NavigationDropdown({ pathname }: NavigationDropdownProps) {
                 }
             }}
         >
-            <div className="flex -translate-y-1 items-center gap-1">
+            <div className="flex items-center gap-1">
                 <span className="text-sm text-foreground">{currentLabel}</span>
                 <SelectTrigger
                     aria-label="Choose page"

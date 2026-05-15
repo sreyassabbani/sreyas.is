@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils";
 
 type Props = {
     pathname: string;
-    className?: string;
 };
 
 type FilterOption = Readonly<{
@@ -49,7 +48,7 @@ const controlChromeClass = cn(
     "rounded-full bg-background text-foreground shadow-none transition-colors duration-200 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background dark:bg-background dark:hover:bg-secondary",
 );
 
-export function ThinkingFilterControl({ pathname, className }: Props) {
+export function ThinkingFilterControl({ pathname }: Props) {
     const [expanded, setExpanded] = React.useState(false);
     const [resetHot, setResetHot] = React.useState(false);
     const isThinking: boolean = pathname.startsWith("/thinking");
@@ -89,10 +88,7 @@ export function ThinkingFilterControl({ pathname, className }: Props) {
                         collapse();
                     }
                 }}
-                className={cn(
-                    "relative m-0 h-8 w-16 min-w-16 border-0 p-0",
-                    className,
-                )}
+                className="relative m-0 h-8 w-16 min-w-16 border-0 p-0"
             >
                 <legend className="sr-only">Thinking filters</legend>
                 <div
