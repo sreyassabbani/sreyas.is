@@ -16,7 +16,6 @@ import {
     type NavigationItem,
     type NavigationItemGroup,
 } from "@/lib/navigation";
-import { cn } from "@/lib/utils";
 
 type NavigationDropdownProps = Readonly<{
     pathname: string;
@@ -38,7 +37,8 @@ export function NavigationDropdown({ pathname }: NavigationDropdownProps) {
         (item: NavigationItem): boolean => isCurrent(pathname, item.href),
     );
     // If on home, we shouldn't force 'thinking' as the default value if it's not the actual current path.
-    const currentHref: string | null = pathname !== "/" ? (currentItem?.href ?? null) : null;
+    const currentHref: string | null =
+        pathname !== "/" ? (currentItem?.href ?? null) : null;
     const [value, setValue] = React.useState<string | null>(currentHref);
 
     React.useEffect(() => {
@@ -61,10 +61,7 @@ export function NavigationDropdown({ pathname }: NavigationDropdownProps) {
             }}
         >
             <div className="flex items-center font-brand text-[clamp(1.8rem,8vw,2.35rem)] font-semibold tracking-tight leading-none">
-                <a
-                    href="/"
-                    className="no-underline hover:text-foreground"
-                >
+                <a href="/" className="no-underline hover:text-foreground">
                     <span className="select-none">sreyas</span>
                     <span className="text-primary select-none">.is</span>
                 </a>
