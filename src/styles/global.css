@@ -1,4 +1,4 @@
-@import "@fontsource/space-grotesk";
+@import "@fontsource/geist-mono";
 @import "@fontsource/literata";
 @import "@fontsource/iosevka";
 @import "tailwindcss";
@@ -52,7 +52,7 @@
     --font-sans: "Literata", Georgia, serif;
     --font-mono: "Iosevka", ui-monospace, monospace;
     --font-heading: "Literata", Georgia, serif;
-    --font-brand: "Space Grotesk", system-ui, sans-serif;
+    --font-brand: "Geist Mono", system-ui, sans-serif;
 
     @keyframes accordion-down {
         from {

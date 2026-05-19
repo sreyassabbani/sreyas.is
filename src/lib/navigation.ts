@@ -10,19 +10,13 @@ export type NavigationItemGroup = Readonly<{
 const thinkingItem: NavigationItem = { href: "/thinking", label: "Thinking" };
 const usingItem: NavigationItem = { href: "/using", label: "Using" };
 const nowItem: NavigationItem = { href: "/now", label: "Now" };
-const moreItem: NavigationItem = { href: "/about", label: "More" };
-
-export const homeNavigationItems: readonly NavigationItem[] = [
-    thinkingItem,
-    usingItem,
-    moreItem,
-];
+const aboutItem: NavigationItem = { href: "/about", label: "About" };
 
 export const mainNavigationGroups: readonly NavigationItemGroup[] = [
     {
         items: [thinkingItem, usingItem],
     },
     {
-        items: [nowItem, moreItem],
+        items: [nowItem, aboutItem],
     },
 ];

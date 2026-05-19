@@ -16,6 +16,7 @@ import {
     type NavigationItem,
     type NavigationItemGroup,
 } from "@/lib/navigation";
+import { cn } from "@/lib/utils";
 
 type NavigationDropdownProps = Readonly<{
     pathname: string;
@@ -26,6 +27,9 @@ const navItems: readonly NavigationItem[] = mainNavigationGroups.flatMap(
 );
 
 function isCurrent(pathname: string, href: string): boolean {
+    if (href === "/") {
+        return pathname === "/";
+    }
     return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -33,14 +37,13 @@ export function NavigationDropdown({ pathname }: NavigationDropdownProps) {
     const currentItem: NavigationItem | undefined = navItems.find(
         (item: NavigationItem): boolean => isCurrent(pathname, item.href),
     );
-    const currentHref: string | null =
-        currentItem?.href ?? navItems[0]?.href ?? null;
-    const currentLabel: string = currentItem?.label ?? "Navigate";
+    // If on home, we shouldn't force 'thinking' as the default value if it's not the actual current path.
+    const currentHref: string | null = pathname !== "/" ? (currentItem?.href ?? null) : null;
     const [value, setValue] = React.useState<string | null>(currentHref);
 
     React.useEffect(() => {
-        setValue(currentHref);
-    }, [currentHref]);
+        setValue(pathname !== "/" ? (currentItem?.href ?? null) : null);
+    }, [pathname, currentItem]);
 
     return (
         <Select
@@ -57,20 +60,31 @@ export function NavigationDropdown({ pathname }: NavigationDropdownProps) {
                 }
             }}
         >
-            <div className="flex items-center gap-1">
-                <span className="text-sm text-foreground">{currentLabel}</span>
+            <div className="flex items-center font-brand text-[clamp(1.8rem,8vw,2.35rem)] font-semibold tracking-tight leading-none">
+                <a
+                    href="/"
+                    className="no-underline hover:text-foreground"
+                >
+                    <span className="select-none">sreyas</span>
+                    <span className="text-primary select-none">.is</span>
+                </a>
                 <SelectTrigger
                     aria-label="Choose page"
-                    className="-mr-1 flex size-7 cursor-pointer items-center justify-center rounded-md border-0 bg-transparent p-0 text-muted-foreground shadow-none transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring dark:bg-transparent dark:hover:bg-muted"
+                    className="ml-4 h-auto w-auto cursor-pointer border-0 bg-transparent p-0 shadow-none hover:bg-transparent focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent"
                 >
+                    <span className="flex items-center rounded border border-muted-foreground/50 px-1.5 py-0.5 text-lg font-normal text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                        {currentItem && currentItem.href !== "/"
+                            ? currentItem.label.toLowerCase()
+                            : "..."}
+                    </span>
                     <SelectValue className="sr-only" />
                 </SelectTrigger>
             </div>
 
             <SelectContent
-                align="end"
-                alignItemWithTrigger={false}
-                className="w-36 min-w-36"
+                align="start"
+                alignOffset={-4}
+                className="w-40 min-w-40"
             >
                 <SelectGroup>
                     {mainNavigationGroups.map(
