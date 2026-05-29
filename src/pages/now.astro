@@ -3,6 +3,7 @@ import { getEntry, render } from "astro:content";
 import { SITE_TITLE } from "@/consts";
 import Layout from "@/layouts/Layout.astro";
 import { contentProseClass } from "@/lib/content-prose";
+import { HomePresence } from "@/components/HomePresence";
 
 const page = await getEntry("pages", "now");
 
@@ -18,6 +19,7 @@ const { Content } = await render(page);
     description={page.data.description}
 >
     <div class={contentProseClass}>
+        <HomePresence client:load />
         <Content />
     </div>
 </Layout>
