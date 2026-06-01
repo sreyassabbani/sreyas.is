@@ -82,7 +82,7 @@ const articleContainerClass = "mx-auto w-full max-w-3xl";
                             )
                         }
                         <h1
-                            class="mt-4 text-balance font-heading text-3xl font-semibold leading-tight tracking-tight sm:text-4xl md:text-5xl"
+                            class="mt-4 text-balance font-heading text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl"
                         >
                             {title}
                         </h1>
@@ -93,29 +93,7 @@ const articleContainerClass = "mx-auto w-full max-w-3xl";
                                 </p>
                             )
                         }
-                        <div
-                            class="mt-5 h-px w-32 bg-border sm:mx-auto sm:w-40"
-                        >
-                        </div>
-                        {
-                            tags.length > 0 && (
-                                <nav
-                                    class="mt-5 flex flex-wrap gap-2 sm:justify-center"
-                                    aria-label="Topics"
-                                >
-                                    {tags.map((tag) => (
-                                        <a
-                                            href={getTagHref(tag)}
-                                            class="rounded-full border border-border px-3 py-1 font-mono text-[0.7rem] text-muted-foreground no-underline transition-colors duration-200 hover:border-primary/40 hover:text-primary"
-                                        >
-                                            {tag}
-                                        </a>
-                                    ))}
-                                </nav>
-                            )
-                        }
                     </header>
-
                     {
                         showToc && (
                             <ContentPostInlineToc groups={inlineTocGroups} />
@@ -129,7 +107,7 @@ const articleContainerClass = "mx-auto w-full max-w-3xl";
             </main>
 
             <div
-                class={`${articleContainerClass} mt-[4.5rem] border-t border-border pt-6 text-center text-xs text-muted-foreground sm:mt-24`}
+                class={`${articleContainerClass} mt-[4.5rem] pt-6 text-center text-xs text-muted-foreground sm:mt-24`}
             >
                 <Footer />
             </div>
