@@ -240,6 +240,15 @@
         text-decoration-color: var(--primary) !important;
     }
 
+    .content-prose--hide-headings :is(h1, h2, h3, h4, h5, h6)[id] {
+        height: 0;
+        margin-block: 0 !important;
+        border: 0 !important;
+        padding-block: 0 !important;
+        overflow: hidden;
+        color: transparent !important;
+    }
+
     :where(:not(pre) > code) {
         @apply rounded-md border border-border/70 bg-muted/75 px-1.5 py-0.5 font-mono text-[0.95em] font-normal text-primary;
         color: oklch(0.58 0.12 247.5);

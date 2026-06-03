@@ -7,16 +7,29 @@ const posts = defineCollection({
         base: "./src/content/posts",
     }),
     schema: ({ image }) =>
-        z.object({
-            title: z.string(),
-            description: z.string(),
-            pubDate: z.coerce.date(),
-            updatedDate: z.coerce.date().optional(),
-            type: z.enum(["long", "short"]),
-            tags: z.array(z.string()).default([]),
-            toc: z.boolean().default(true),
-            heroImage: image().optional(),
-        }),
+        z
+            .object({
+                title: z.string(),
+                description: z.string(),
+                pubDate: z.coerce.date(),
+                updatedDate: z.coerce.date().optional(),
+                type: z.enum(["long", "short"]),
+                tags: z.array(z.string()).default([]),
+                toc: z.boolean().default(true),
+                headingDisplay: z
+                    .enum(["visible", "toc-only"])
+                    .default("visible"),
+                heroImage: image().optional(),
+            })
+            .refine(
+                ({ headingDisplay, toc }) =>
+                    headingDisplay !== "toc-only" || toc,
+                {
+                    message:
+                        'headingDisplay: "toc-only" requires toc to be true',
+                    path: ["headingDisplay"],
+                },
+            ),
 });
 
 const pages = defineCollection({

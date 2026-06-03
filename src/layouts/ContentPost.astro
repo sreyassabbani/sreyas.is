@@ -10,7 +10,6 @@ import Footer from "@/components/Footer.astro";
 import FormattedDate from "@/components/FormattedDate.astro";
 import { contentProseClass } from "@/lib/content-prose";
 import { getInlineTocGroups, getRailTocGroups } from "@/lib/content-toc";
-import { getTagHref } from "@/lib/thinking";
 
 type Props = CollectionEntry<"posts">["data"] & {
     headings: MarkdownHeading[];
@@ -22,16 +21,20 @@ const {
     pubDate,
     updatedDate,
     heroImage,
-    tags,
     toc,
+    headingDisplay,
     headings,
 } = Astro.props as Props;
 
 const showToc = toc !== false;
+const showHeadings = headingDisplay !== "toc-only";
 const inlineTocGroups = showToc ? getInlineTocGroups(headings) : [];
 const railTocGroups = showToc ? getRailTocGroups(headings) : [];
 
 const articleContainerClass = "mx-auto w-full max-w-3xl";
+const proseClass = showHeadings
+    ? contentProseClass
+    : `${contentProseClass} content-prose--hide-headings`;
 ---
 
 <html lang="en">
@@ -100,7 +103,7 @@ const articleContainerClass = "mx-auto w-full max-w-3xl";
                         )
                     }
 
-                    <div class={contentProseClass}>
+                    <div class={proseClass}>
                         <slot />
                     </div>
                 </article>
