@@ -249,6 +249,29 @@
         color: transparent !important;
     }
 
+    .content-prose .footnotes {
+        position: relative;
+        margin-top: 5rem !important;
+        border-top: 1px solid
+            color-mix(in oklab, var(--border) 82%, transparent);
+        padding-top: 2rem;
+    }
+
+    .content-prose .footnotes::before {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        padding-inline: 0.85rem;
+        background: var(--background);
+        color: var(--muted-foreground);
+        content: "footnotes";
+        font-family: var(--font-brand);
+        font-size: 0.68rem;
+        letter-spacing: 0.02em;
+        line-height: 1;
+        transform: translate(-50%, -50%);
+    }
+
     :where(:not(pre) > code) {
         @apply rounded-md border border-border/70 bg-muted/75 px-1.5 py-0.5 font-mono text-[0.95em] font-normal text-primary;
         color: oklch(0.58 0.12 247.5);
