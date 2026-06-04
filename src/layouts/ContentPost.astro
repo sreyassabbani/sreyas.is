@@ -12,7 +12,7 @@ import { contentProseClass } from "@/lib/content-prose";
 import { getInlineTocGroups, getRailTocGroups } from "@/lib/content-toc";
 
 type Props = CollectionEntry<"posts">["data"] & {
-    headings: MarkdownHeading[];
+    markdownHeadings: MarkdownHeading[];
 };
 
 const {
@@ -22,14 +22,14 @@ const {
     updatedDate,
     heroImage,
     toc,
-    headingDisplay,
-    headings,
+    headings: headingDisplay,
+    markdownHeadings,
 } = Astro.props as Props;
 
 const showToc = toc !== false;
-const showHeadings = headingDisplay !== "toc-only";
-const inlineTocGroups = showToc ? getInlineTocGroups(headings) : [];
-const railTocGroups = showToc ? getRailTocGroups(headings) : [];
+const showHeadings = headingDisplay === "visible";
+const inlineTocGroups = showToc ? getInlineTocGroups(markdownHeadings) : [];
+const railTocGroups = showToc ? getRailTocGroups(markdownHeadings) : [];
 
 const articleContainerClass = "mx-auto w-full max-w-3xl";
 const proseClass = showHeadings

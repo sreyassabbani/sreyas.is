@@ -16,6 +16,6 @@ const post = Astro.props;
 const { Content, headings } = await render(post);
 ---
 
-<ContentPost {...post.data} headings={headings}>
+<ContentPost {...post.data} markdownHeadings={headings}>
     <Content />
 </ContentPost>

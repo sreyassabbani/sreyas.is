@@ -16,20 +16,15 @@ const posts = defineCollection({
                 type: z.enum(["long", "short"]),
                 tags: z.array(z.string()).default([]),
                 toc: z.boolean().default(true),
-                headingDisplay: z
-                    .enum(["visible", "toc-only"])
+                headings: z
+                    .enum(["visible", "toc-only", "none"])
                     .default("visible"),
                 heroImage: image().optional(),
             })
-            .refine(
-                ({ headingDisplay, toc }) =>
-                    headingDisplay !== "toc-only" || toc,
-                {
-                    message:
-                        'headingDisplay: "toc-only" requires toc to be true',
-                    path: ["headingDisplay"],
-                },
-            ),
+            .refine(({ headings, toc }) => headings !== "toc-only" || toc, {
+                message: 'headings: "toc-only" requires toc to be true',
+                path: ["headings"],
+            }),
 });
 
 const pages = defineCollection({
