@@ -1,15 +1,17 @@
-import { spawnSync } from "node:child_process";
 import type { Dirent } from "node:fs";
 import { cp, lstat, mkdir, readdir, rm, stat, unlink } from "node:fs/promises";
-import { homedir } from "node:os";
 import path from "node:path";
+import { Glob } from "bun";
 
 const root = process.cwd();
+const homePath = Bun.env.HOME ?? "";
 export const mountPath = path.resolve(root, "src/content");
+export const backupDraftMirrorPath = path.join("/tmp", "sreyas.is-content-bak");
 export const ignoredPathSegments = new Set([".git", ".github"]);
 export const ignoredSourceFiles = new Set(["LICENSE", "README.md"]);
 export const ignoredSourceBasenames = new Set([".DS_Store"]);
 export const showUntrackedFlag = "--show-untracked";
+const backupDraftGlob = new Glob("**/*-bak*.mdx");
 
 export async function pathExists(targetPath: string) {
     try {
@@ -21,10 +23,10 @@ export async function pathExists(targetPath: string) {
 }
 
 export async function resolveSourcePath() {
-    const configuredSource = process.env.CONTENT_DIR?.trim();
+    const configuredSource = Bun.env.CONTENT_DIR?.trim();
     const sourceCandidates = [
         configuredSource ? path.resolve(root, configuredSource) : undefined,
-        path.join(homedir(), "workflow/content"),
+        homePath ? path.join(homePath, "workflow/content") : undefined,
         path.resolve(root, "../content"),
     ].filter((candidate): candidate is string => Boolean(candidate));
 
@@ -34,7 +36,7 @@ export async function resolveSourcePath() {
         }
     }
 
-    return sourceCandidates[0] ?? path.join(homedir(), "content");
+    return sourceCandidates[0] ?? path.join(homePath, "content");
 }
 
 async function directoryHasEntries(targetPath: string) {
@@ -59,18 +61,21 @@ function isIgnoredRelativePath(relativePath: string) {
 }
 
 export function listTrackedSourceFiles(sourcePath: string) {
-    const result = spawnSync("git", ["-C", sourcePath, "ls-files", "-z"], {
-        encoding: "utf8",
+    const result = Bun.spawnSync({
+        cmd: ["git", "-C", sourcePath, "ls-files", "-z"],
+        stdout: "pipe",
+        stderr: "pipe",
     });
 
-    if (result.status !== 0) {
-        const errorOutput = result.stderr.trim();
+    if (result.exitCode !== 0) {
+        const errorOutput = result.stderr.toString().trim();
         throw new Error(
             errorOutput || `failed to list tracked files in ${sourcePath}`,
         );
     }
 
     return result.stdout
+        .toString()
         .split("\0")
         .filter(Boolean)
         .filter((relativePath) => !isIgnoredRelativePath(relativePath));
@@ -92,18 +97,21 @@ function listSourceFiles(
               "--exclude-standard",
           ]
         : ["-C", sourcePath, "ls-files", "-z"];
-    const result = spawnSync("git", gitArgs, {
-        encoding: "utf8",
+    const result = Bun.spawnSync({
+        cmd: ["git", ...gitArgs],
+        stdout: "pipe",
+        stderr: "pipe",
     });
 
-    if (result.status !== 0) {
-        const errorOutput = result.stderr.trim();
+    if (result.exitCode !== 0) {
+        const errorOutput = result.stderr.toString().trim();
         throw new Error(
             errorOutput || `failed to list source files in ${sourcePath}`,
         );
     }
 
     return result.stdout
+        .toString()
         .split("\0")
         .filter(Boolean)
         .filter((relativePath) => !isIgnoredRelativePath(relativePath));
@@ -181,6 +189,95 @@ async function filesDiffer(sourceFilePath: string, mountFilePath: string) {
         );
     } catch {
         return true;
+    }
+}
+
+async function mirroredFileIsFresh(
+    sourceFilePath: string,
+    mirrorFilePath: string,
+) {
+    try {
+        const [sourceStats, mirrorStats] = await Promise.all([
+            stat(sourceFilePath),
+            stat(mirrorFilePath),
+        ]);
+
+        return (
+            sourceStats.size === mirrorStats.size &&
+            mirrorStats.mtimeMs >= sourceStats.mtimeMs
+        );
+    } catch {
+        return false;
+    }
+}
+
+async function listBackupDraftFiles(sourcePath: string) {
+    const files: string[] = [];
+
+    for await (const relativePath of backupDraftGlob.scan({
+        cwd: sourcePath,
+        onlyFiles: true,
+    })) {
+        if (!isIgnoredRelativePath(relativePath)) {
+            files.push(relativePath);
+        }
+    }
+
+    return files;
+}
+
+export async function syncBackupDraftMirror(
+    options: { logPrefix?: string } = {},
+) {
+    const { logPrefix = "[content-bak]" } = options;
+    const sourcePath = await resolveSourcePath();
+
+    if (!(await pathExists(sourcePath))) {
+        await rm(backupDraftMirrorPath, { force: true, recursive: true });
+        return;
+    }
+
+    const backupDraftFiles = await listBackupDraftFiles(sourcePath);
+    const backupDraftFileSet = new Set(backupDraftFiles);
+    let changedFileCount = 0;
+    let removedFileCount = 0;
+
+    await mkdir(backupDraftMirrorPath, { recursive: true });
+
+    await Promise.all(
+        backupDraftFiles.map(async (relativePath) => {
+            const sourceFilePath = path.join(sourcePath, relativePath);
+            const mirrorFilePath = path.join(
+                backupDraftMirrorPath,
+                relativePath,
+            );
+
+            await mkdir(path.dirname(mirrorFilePath), { recursive: true });
+
+            if (await mirroredFileIsFresh(sourceFilePath, mirrorFilePath)) {
+                return;
+            }
+
+            await Bun.write(Bun.file(mirrorFilePath), Bun.file(sourceFilePath));
+            changedFileCount += 1;
+        }),
+    );
+
+    for (const relativePath of await listMountedFiles(backupDraftMirrorPath)) {
+        if (backupDraftFileSet.has(relativePath)) {
+            continue;
+        }
+
+        await unlink(path.join(backupDraftMirrorPath, relativePath));
+        removedFileCount += 1;
+    }
+
+    await pruneEmptyDirectories(backupDraftMirrorPath);
+
+    if (changedFileCount > 0 || removedFileCount > 0) {
+        console.log(
+            `${logPrefix} mirrored ${backupDraftFiles.length} *-bak*.mdx files -> ${backupDraftMirrorPath} (${changedFileCount} changed, ${removedFileCount} removed)`,
+        );
     }
 }
 

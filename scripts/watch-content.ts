@@ -7,6 +7,7 @@ import {
     parseMountContentArgs,
     pathExists,
     resolveSourcePath,
+    syncBackupDraftMirror,
 } from "./mount-content";
 
 const root = process.cwd();
@@ -51,6 +52,7 @@ async function syncMount() {
 
     try {
         await ensureMountedContent({ includeUntracked, logPrefix });
+        await syncBackupDraftMirror({ logPrefix });
 
         const nextSourcePath = await resolveSourcePath();
         if (
@@ -174,6 +176,7 @@ process.on("SIGTERM", () => {
 
 if (!skipInitialSync) {
     await ensureMountedContent({ includeUntracked, logPrefix });
+    await syncBackupDraftMirror({ logPrefix });
 }
 
 await restartWatcher();

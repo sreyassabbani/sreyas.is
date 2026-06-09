@@ -1,38 +1,33 @@
-import { type ChildProcess, spawn } from "node:child_process";
 import {
     ensureMountedContent,
     parseMountContentArgs,
     showUntrackedFlag,
+    syncBackupDraftMirror,
 } from "./mount-content";
 
 const root = process.cwd();
 const args = process.argv.slice(2);
 const { includeUntracked } = parseMountContentArgs(args);
 const astroArgs = args.filter((arg) => arg !== showUntrackedFlag);
+type ManagedProcess = ReturnType<typeof Bun.spawn>;
 
 function spawnProcess(
     cmd: string[],
     options: { stdin?: "ignore" | "inherit" } = {},
 ) {
-    return spawn(cmd[0], cmd.slice(1), {
+    return Bun.spawn(cmd, {
         cwd: root,
-        env: process.env,
-        stdio: [options.stdin ?? "ignore", "inherit", "inherit"],
+        env: Bun.env,
+        stdin: options.stdin === "inherit" ? "inherit" : null,
+        stdout: "inherit",
+        stderr: "inherit",
     });
 }
 
-const waitForExit = (process: ChildProcess) =>
-    new Promise<number | null>((resolve) => {
-        if (process.exitCode !== null || process.signalCode !== null) {
-            resolve(process.exitCode);
-            return;
-        }
-
-        process.once("exit", (code) => resolve(code));
-    });
+const waitForExit = async (process: ManagedProcess) => await process.exited;
 
 const terminate = (
-    processes: ChildProcess[],
+    processes: ManagedProcess[],
     signal: NodeJS.Signals = "SIGTERM",
 ) => {
     for (const process of processes) {
@@ -45,6 +40,7 @@ const terminate = (
 };
 
 await ensureMountedContent({ includeUntracked });
+await syncBackupDraftMirror();
 
 const watchArgs = ["--skip-initial-sync"];
 if (includeUntracked) {
