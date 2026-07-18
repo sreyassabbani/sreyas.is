@@ -66,6 +66,35 @@ export function getRailTocGroups(headings: MarkdownHeading[]) {
     );
 }
 
+export function getPageTocGroups(headings: MarkdownHeading[]) {
+    const pageHeadings = sliceHeadings(headings, 1, 6);
+
+    if (pageHeadings.length === 0) {
+        return [];
+    }
+
+    const topLevelDepth = Math.min(...pageHeadings.map(({ depth }) => depth));
+    const groups: TocGroup[] = [];
+
+    for (const heading of pageHeadings) {
+        if (heading.depth === topLevelDepth || groups.length === 0) {
+            groups.push({
+                slug: heading.slug,
+                text: heading.text,
+                children: [],
+            });
+            continue;
+        }
+
+        groups[groups.length - 1].children.push({
+            slug: heading.slug,
+            text: heading.text,
+        });
+    }
+
+    return groups;
+}
+
 export const topFallbackTocGroup: TocGroup = {
     slug: "top",
     text: "Top",

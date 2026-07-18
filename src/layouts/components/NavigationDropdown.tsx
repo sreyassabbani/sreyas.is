@@ -11,19 +11,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import {
-    mainNavigationGroups,
-    type NavigationItem,
-    type NavigationItemGroup,
-} from "@/lib/navigation";
+import type { NavigationItem, NavigationItemGroup } from "@/lib/navigation";
 
 type NavigationDropdownProps = Readonly<{
     pathname: string;
+    groups: readonly NavigationItemGroup[];
 }>;
-
-const navItems: readonly NavigationItem[] = mainNavigationGroups.flatMap(
-    (group: NavigationItemGroup): readonly NavigationItem[] => group.items,
-);
 
 function isCurrent(pathname: string, href: string): boolean {
     if (href === "/") {
@@ -32,7 +25,13 @@ function isCurrent(pathname: string, href: string): boolean {
     return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function NavigationDropdown({ pathname }: NavigationDropdownProps) {
+export function NavigationDropdown({
+    pathname,
+    groups,
+}: NavigationDropdownProps) {
+    const navItems: readonly NavigationItem[] = groups.flatMap(
+        (group: NavigationItemGroup): readonly NavigationItem[] => group.items,
+    );
     const currentItem: NavigationItem | undefined = navItems.find(
         (item: NavigationItem): boolean => isCurrent(pathname, item.href),
     );
@@ -81,10 +80,11 @@ export function NavigationDropdown({ pathname }: NavigationDropdownProps) {
             <SelectContent
                 align="start"
                 alignOffset={-4}
+                alignItemWithTrigger={false}
                 className="w-40 min-w-40"
             >
                 <SelectGroup>
-                    {mainNavigationGroups.map(
+                    {groups.map(
                         (group: NavigationItemGroup, groupIndex: number) => (
                             <React.Fragment
                                 key={group.items

@@ -69,7 +69,7 @@ export function HomePresence() {
     }
 
     return (
-        <div className="flex flex-wrap gap-x-5 gap-y-2 pt-2 text-[0.95rem] text-muted-foreground/80">
+        <div className="flex flex-wrap gap-x-5 gap-y-2 text-[0.95rem] text-muted-foreground/80 pb-2">
             <div className="flex items-center gap-1.5 transition-colors hover:text-foreground">
                 <MapPinIcon
                     className="size-3.5 translate-y-[1px]"

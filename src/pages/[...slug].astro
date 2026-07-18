@@ -1,0 +1,41 @@
+---
+import { type CollectionEntry, getCollection, render } from "astro:content";
+import ContentPostInlineToc from "@/components/ContentPostInlineToc.astro";
+import ContentPostRail from "@/components/ContentPostRail.astro";
+import { SITE_TITLE } from "@/consts";
+import Layout from "@/layouts/Layout.astro";
+import { contentProseClass } from "@/lib/content-prose";
+import { getPageTocGroups } from "@/lib/content-toc";
+
+export async function getStaticPaths() {
+    const pages = await getCollection("pages");
+
+    return pages.map((page) => ({
+        params: { slug: page.id },
+        props: page,
+    }));
+}
+
+type Props = CollectionEntry<"pages">;
+
+const page = Astro.props;
+const { Content, headings } = await render(page);
+const tocGroups = page.data.toc ? getPageTocGroups(headings) : [];
+---
+
+<Layout
+    title={`${SITE_TITLE} — ${page.data.title}`}
+    description={page.data.description}
+>
+    {
+        page.data.toc && (
+            <ContentPostRail groups={tocGroups} ariaLabel="Page sections" />
+        )
+    }
+    <div class="md:pt-4">
+        {page.data.toc && <ContentPostInlineToc groups={tocGroups} />}
+        <div class={contentProseClass}>
+            <Content />
+        </div>
+    </div>
+</Layout>

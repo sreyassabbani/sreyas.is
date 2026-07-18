@@ -240,6 +240,10 @@
         text-decoration-color: var(--primary) !important;
     }
 
+    .content-prose :is(span, mark) > :is(strong, em) {
+        color: inherit;
+    }
+
     .content-prose--hide-headings :is(h1, h2, h3, h4, h5, h6)[id] {
         height: 0;
         margin-block: 0 !important;
@@ -297,7 +301,10 @@
     }
 
     .margin-note {
-        @apply my-3 block rounded-lg border border-border/70 bg-secondary/45 px-3 py-2 text-sm leading-6 text-muted-foreground;
+        @apply mx-1 inline rounded-md border border-border/70 bg-secondary/45 px-1.5 py-0.5 text-sm text-muted-foreground;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+        line-height: inherit;
     }
 
     .margin-note__marker {

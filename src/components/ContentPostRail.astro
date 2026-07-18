@@ -4,9 +4,10 @@ import { topFallbackTocGroup } from "@/lib/content-toc";
 
 type Props = {
     groups: TocGroup[];
+    ariaLabel?: string;
 };
 
-const { groups } = Astro.props as Props;
+const { groups, ariaLabel = "Post sections" } = Astro.props as Props;
 const railEntries = groups.length > 0 ? groups : [topFallbackTocGroup];
 
 const railLinkClass =
@@ -18,7 +19,7 @@ const railChildListClass =
 <aside
     class="group/tocrail fixed inset-y-0 left-0 z-20 hidden w-56 xl:block"
     data-post-rail
-    aria-label="Post sections"
+    aria-label={ariaLabel}
 >
     <div
         class="pointer-events-auto absolute inset-y-0 left-0 w-7"
