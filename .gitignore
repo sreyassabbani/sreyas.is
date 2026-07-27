@@ -26,8 +26,8 @@ pnpm-debug.log*
 # direnv
 .direnv
 
-# gh workflows use `sreyassabbani/content`
-src/content
+# local-only mirror of the private content repository
+src/content-preview
 
 # local backups for generated blog sync
 .content-sync-backups/
