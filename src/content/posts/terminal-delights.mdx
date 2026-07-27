@@ -1,0 +1,92 @@
+---
+title: "terminal delights"
+description: "fine dining"
+publish: true
+pubDate: "Jul 1 2026"
+type: "long"
+tags: ["cli", "software"]
+---
+
+import EllipsisBreak from "@/components/EllipsisBreak.astro";
+
+
+I invite you to some fine dining ... in my terminal.
+
+<EllipsisBreak />
+
+### Internet speed test
+
+From [`maaslalani/fast`](https://github.com/maaslalani/fast) (which is based on [`fast.com`](https://fast.com)):
+```
+sreysus [λ] fast
+
+  746.0 Mbps ⢠⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿  peak 751
+```
+
+Very neat.
+
+### Typing test
+
+From [`lemnos/tt`](https://github.com/lemnos/tt):
+```
+sreysus [λ] tt
+```
+
+A nerdier version of [monkeytype](https://monkeytype.com)
+
+### Fastfetch
+
+This one's a lot more popular (cf. [`fastfetch-cli/fastfetch`](https://github.com/fastfetch-cli/fastfetch)). I'm honestly guilty of not running this more often. Running this recently reminded me to go run garbage collection on my Nix store. This also does expose some other parts of me (cough cough uptime): 
+
+```
+sreysus [λ] fastfetch --logo none
+sreysus@SSs-Air
+---------------
+OS: macOS Tahoe 26.1 (25B78) arm64
+Host: MacBook Air (13-inch, M4, 2025)
+Kernel: Darwin 25.1.0
+Uptime: 54 days, 13 mins
+Packages: 493 (nix-system), 56 (nix-default), 94 (brew), 27 (brew-cask)
+Shell: nushell 0.108.0
+Display (Color LCD): 3420x2224 @ 2x in 14", 60 Hz [Built-in]
+WM: Quartz Compositor 341.1.4
+WM Theme: Multicolor (Dark)
+Theme: Liquid Glass
+Font: .AppleSystemUIFont [System], Helvetica [User]
+Cursor: Fill - Black, Outline - White (32px)
+Terminal: ghostty 1.2.3
+Terminal Font: GeistMono Nerd Font Mono (16pt)
+CPU: Apple M4 (10) @ 4.46 GHz
+GPU: Apple M4 (10) @ 1.47 GHz [Integrated]
+Memory: 17.11 GiB / 24.00 GiB (71%)
+Swap: 328.50 MiB / 2.00 GiB (16%)
+Disk (/): 327.43 GiB / 460.43 GiB (71%) - apfs [Read-only]
+Local IP (en0): 10.0.0.231/24
+Battery (bq40z651): 57% (3 hours, 39 mins remaining) [Discharging]
+Locale: en_US.UTF-8
+```
+
+(I set `--logo none` because the Iosevka font on the code block squishes/warps the logo; otherwise, I would've loved to show off the Apple logo)
+
+### Change directory
+
+This one is also quite popular: [`ajeetdsouza/zoxide`](https://github.com/ajeetdsouza/zoxide).
+
+```
+~/workflow/sreyas.is/src/layouts
+sreysus [λ] cd posts
+direnv: unloading
+
+~/workflow/content/posts
+sreysus [λ]  
+```
+
+It's honestly quite magical.
+
+### Yazi
+
+Running [`yazi`](https://github.com/sxyazi/yazi):
+
+<EllipsisBreak />
+
+That's it for now. I might add more to this later on.

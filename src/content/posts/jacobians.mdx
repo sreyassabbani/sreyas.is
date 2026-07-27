@@ -1,0 +1,244 @@
+---
+title: "deriving Jacobians"
+description: "and some calculus dark magic"
+publish: true
+pubDate: "Jun 04 2026"
+type: "long"
+tags: ["calculus", "jacobians"]
+toc: false
+headings: visible
+---
+
+import ContentClosure from "@/components/ContentClosure.astro";
+import EllipsisBreak from "@/components/EllipsisBreak.astro";
+import { ToolTip } from "@/components/ui/tooltip.tsx";
+import MarginNote from "@/components/MarginNote.astro";
+import differentialExpansionsVideo from "./components/jacobians/media/differential_expansions.mp4";
+
+Let's start with the problem at hand.
+
+**Problem.** We are trying to perform a change of variables in higher dimensions. In particular, for this integral:
+
+$$
+\iiint_V f(x,y,z)\;dxdydz
+$$
+
+Instead of bounding $V$ with Cartesian coordinates $(x, y, z)$ and integrating over those rectangular coordinates, say we want to use spherical coordinates $(\rho, \theta, \phi)$ instead.
+
+Let's analyze the simpler 1D case first:
+
+$$
+\int_a^b f(x)\;dx
+$$
+
+In fact, let's even give ourselves an example to work with.
+
+<span id="eq-1"></span>
+$$
+\tag{ex. \#1}I = \int_0^{2}\frac{x}{1+x^2}dx
+$$
+
+So in a single-variable integral, you would perform some transformation $u=u(x)$ being some function of $x$. <MarginNote>or substitution $x=p(u)$ with $q=p^{-1}$; both should give the same results (probably with an asterisk for non-injective functions)</MarginNote> Such a function would let us turn $dx$ into $du$ as well assuming $du=X\;dx$. Conveniently,
+
+$$
+du=X\; dx \qquad\implies \qquad X = \frac{du}{dx}
+$$
+
+We can easily calculate this scale factor $X$. Then the integral transforms into something; with the transformation $u=x^2$, the [example integral](#eq-1) becomes
+
+$$
+I = \frac12\int_0^4\frac{du}{1+u}
+$$
+
+This should be familiar; this yields $I=\ln\sqrt5$. However, with our original problem with multivariable calculus, this scale factor $X$ seems a bit more elusive; you can't just move one variable to one side:
+
+$$
+dxdydz= X \; d\rho d\theta d\phi \qquad \overset{???}{\implies} \qquad X\overset{??}=\frac{dxdydz}{d\rho d\theta d\phi}
+$$
+
+In a usual calculus class, you (and I, too) have probably been taught to be wary of treating "differentials" as ordinary objects, but not given much further explanation. Sometimes it's magic when it works. Typically that's for the good reason of avoiding quite a large rabbit hole. <MarginNote>I apologize; perhaps this sparks an interest of your own!</MarginNote> Me personally, I haven't dabbled into it much rigorously, so that's a disclaimer.
+
+Firstly, think about the old coordinate system as a function of our new coordinate system $(\crho, \ctheta, \cphi)$. <MarginNote>Hopefully the colors help.</MarginNote>
+
+<span id="eq-2"></span>
+$$
+\begin{rcases}
+x(\crho, \ctheta, \cphi)=\crho\sin\cphi\cos\ctheta\quad
+\\
+y(\crho, \ctheta, \cphi)=\crho\sin\cphi\sin\ctheta\quad
+\\
+z(\crho, \ctheta, \cphi)=\crho\cos\cphi\quad
+\end{rcases}
+\quad\text{coordinate variables as \textbf{functions} of other coordinates}
+$$
+
+So we can express:
+
+$$
+dx = \frac{\partial x}{\partial \crho} \drho + \frac{\partial x}{\partial \ctheta} \dtheta + \frac{\partial x}{\partial \cphi} \dphi
+$$
+
+$$
+dy = \frac{\partial y}{\partial \crho} \drho + \frac{\partial y}{\partial \ctheta} \dtheta + \frac{\partial y}{\partial \cphi} \dphi
+$$
+
+$$
+dz = \frac{\partial z}{\partial \crho} \drho + \frac{\partial z}{\partial \ctheta} \dtheta + \frac{\partial z}{\partial \cphi} \dphi
+$$
+
+And do that for $dy$ and $dz$ as well, collect $\drho\dtheta \dphi$ and then we have $X$ in $dxdydz=X\; \drho\dtheta \dphi$ (hopefully)!!
+
+$$
+dxdydz=\left(\frac{\partial x}{\partial \crho} \drho + \frac{\partial x}{\partial \ctheta} \dtheta + \frac{\partial x}{\partial \cphi} \dphi\right)
+\left(\frac{\partial y}{\partial \crho} \drho + \frac{\partial y}{\partial \ctheta} \dtheta + \frac{\partial y}{\partial \cphi} \dphi\right)
+\left(\frac{\partial z}{\partial \crho} \drho + \frac{\partial z}{\partial \ctheta} \dtheta + \frac{\partial z}{\partial \cphi} \dphi\right)
+$$
+
+Hopefully the vision is clear: on the right, I'd extract $\drho\dtheta \dphi$ and then the coefficient would be $X$. You might ask, _ARE YOU CRAZY?_ First of all, we have to deal with $3\times3\times3 = 27$ terms, and we aren’t even sure there is even the _slightest_ hope that this simplifies. Continue holding my beer.
+
+The following is an animation of the algebraic manipulations. It relies on repeatedly applying the following fact, for a general coordinate variable $q$:
+
+$$
+dq^2=0
+$$
+
+I will talk more about this at the end of this post, but for now, feel free to pause the video at certain steps to understand _which_ terms are getting annihilated, etc.
+
+<video
+    controls
+    playsInline
+    preload="metadata"
+    className="my-8 w-full rounded-xl"
+    src={differentialExpansionsVideo}
+/>
+
+So that's the first part in action. Also, let's make a quick notation change using $x_{\rho}=\frac{\partial x}{\partial \rho}$.
+
+$$
+\begin{align*}
+dx \, dy \, dz = {} & \left( x_{\crho} \drho + x_{\ctheta} \dtheta + x_{\cphi} \dphi \right) = \quad x_{\crho} y_{\ctheta} z_{\cphi} \drho \, \dtheta \, \dphi \\
+& \left( y_{\crho} \drho + y_{\ctheta} \dtheta + y_{\cphi} \dphi \right) \quad\; + x_{\crho} y_{\cphi} z_{\ctheta} \drho \, \dphi \, \dtheta \\
+& \left( z_{\crho} \drho + z_{\ctheta} \dtheta + z_{\cphi} \dphi \right) \quad\; + x_{\ctheta} y_{\crho} z_{\cphi} \dtheta \, \drho \, \dphi \\
+& \phantom{\left( z_{\crho} \drho + z_{\ctheta} \dtheta + z_{\cphi} \dphi \right)} \quad\; + x_{\ctheta} y_{\cphi} z_{\crho} \dtheta \, \dphi \, \drho \\
+& \phantom{\left( z_{\crho} \drho + z_{\ctheta} \dtheta + z_{\cphi} \dphi \right)} \quad\; + x_{\cphi} y_{\crho} z_{\ctheta} \dphi \, \drho \, \dtheta \\
+& \phantom{\left( z_{\crho} \drho + z_{\ctheta} \dtheta + z_{\cphi} \dphi \right)} \quad\; + x_{\cphi} y_{\ctheta} z_{\crho} \dphi \, \dtheta \, \drho
+\end{align*}
+$$
+
+Even after this _massive_ simplification, you might still think we're quite far from our beloved Jacobian determinant.
+
+
+<EllipsisBreak />
+
+Once again, you will continue holding my beer for another fact.
+<MarginNote>and there is a lot to say about this fact later; despite all the reasons to panic, please don't!</MarginNote>
+
+$$
+\drho\dtheta=-\dtheta\drho
+$$
+
+Perform swaps for each term so that it ends in $\drho\dtheta\dphi$:
+ 
+$$
+\begin{align*}
+dx \, dy \, dz = \phantom{+} & x_{\crho} y_{\ctheta} z_{\cphi} \, \drho \, \dtheta \, \dphi \\
+{} - \; & x_{\crho} y_{\cphi} z_{\ctheta} \, \drho \, \dtheta \, \dphi \\
+{} - \; & x_{\ctheta} y_{\crho} z_{\cphi} \, \drho \, \dtheta \, \dphi \\
+{} + \; & x_{\ctheta} y_{\cphi} z_{\crho} \, \drho \, \dtheta \, \dphi \\
+{} + \; & x_{\cphi} y_{\crho} z_{\ctheta} \, \drho \, \dtheta \, \dphi \\
+{} - \; & x_{\cphi} y_{\ctheta} z_{\crho} \, \drho \, \dtheta \, \dphi
+\end{align*}
+$$
+
+Please take some time to notice the elaborate positioning of everything colored.
+
+Now _finally_, we can extract the coefficient $X$:
+
+<MarginNote>$\because \quad dxdydz=X \;\drho\dtheta\dphi$</MarginNote>
+$$
+X=x_{\crho} y_{\ctheta} z_{\cphi} - x_{\crho} y_{\cphi} z_{\ctheta} - x_{\ctheta} y_{\crho} z_{\cphi} + x_{\ctheta} y_{\cphi} z_{\crho} + x_{\cphi} y_{\crho} z_{\ctheta} - x_{\cphi} y_{\ctheta} z_{\crho}
+$$
+
+And there you go. In our original problem:
+
+$$
+dxdydz = \textcolor{gray}{(x_{\rho} y_{\theta} z_{\phi} - x_{\rho} y_{\phi} z_{\theta} - x_{\theta} y_{\rho} z_{\phi} + x_{\theta} y_{\phi} z_{\rho} + x_{\phi} y_{\rho} z_{\theta} - x_{\phi} y_{\theta} z_{\rho})}\; d\rho d\theta d\phi
+$$
+
+In fact, we can carry out the calculations of what each of these partial derivatives should be by [reminding ourselves of what the rectangular coordinates were in terms of the spherical ones](#eq-2). And we get the very familiar and grand:
+
+$$
+X = \textcolor{gray}{x_{\rho} y_{\theta} z_{\phi} - x_{\rho} y_{\phi} z_{\theta} - x_{\theta} y_{\rho} z_{\phi} + x_{\theta} y_{\phi} z_{\rho} + x_{\phi} y_{\rho} z_{\theta} - x_{\phi} y_{\theta} z_{\rho}} = \crho^2\sin\cphi
+$$
+
+And so that happens to be what the Jacobian determinant is for spherical coordinates from rectangular coordinates. $\det J=X$.
+
+<EllipsisBreak />
+
+While we could've stopped here, as we finally have found _what_ $X$ is, the itch to generalize this formula beyond just rectangular to spherical coordinates is pretty good, so why don't we?
+
+The following move is something  I think would either require a stroke of luck via a pre-existing knowledge of the [combinatorial properties of a determinant](https://www.youtube.com/watch?v=6_wDiBVttTM) or a really good geometric picture and understanding of linear algebra, both of which are very interesting approaches.
+
+$$
+X = x_{\crho}(y_{\ctheta}z_{\cphi} - y_{\cphi}z_{\ctheta}) - x_{\ctheta}(y_{\crho} z_{\cphi} - y_{\cphi}z_{\crho}) + x_{\cphi}(y_{\crho} z_{\ctheta} - y_{\ctheta}z_{\crho})
+$$
+
+The $3\times 3$ determinant is probably very familiar to a lot of people reading this (the curious are led to the Wikipedia page on the [Leibniz formula for determinants](https://en.wikipedia.org/wiki/Leibniz_formula_for_determinants), if not already looked at before). Thus,
+
+$$
+X = \begin{vmatrix} 
+x_{\crho} & x_{\ctheta} & x_{\cphi} \\
+y_{\crho} & y_{\ctheta} & y_{\cphi} \\
+z_{\crho} & z_{\ctheta} & z_{\cphi}
+\end{vmatrix}
+$$
+
+We finally define, to our convenience, the Jacobian.
+
+$$
+J=\begin{pmatrix} 
+x_{\crho} & x_{\ctheta} & x_{\cphi} \\
+y_{\crho} & y_{\ctheta} & y_{\cphi} \\
+z_{\crho} & z_{\ctheta} & z_{\cphi}
+\end{pmatrix}
+$$
+
+Well, it's the Jacobian for transforming from rectangular to spherical coordinates; however, it should be easy to see how to extend this to higher dimensions and also for other smooth coordinate changes.
+
+<EllipsisBreak />
+
+# So why do I care (and why should you, too)?
+
+For me, Jacobians were always annoying to remember and (like many math concepts) are typically presented as definitions and you were told to just bash sample problems afterwards. Sometimes, you'll be gifted by the geometric intuition of what Jacobians are (local scale factors), yet you would still go on carrying out calculations where you might not know where each term comes from. If you're like me, that might've bothered you slightly, even given the visual picture of the "local scale factor".
+
+Given that, this blog post was an attempt at a faithful reconstruction of the Jacobian, as well as to understand _why_ it's even necessary. So that was the motivation. For a faithful rederivation, I tried to make no part of the derivation process motivated by a pre-existing knowledge of Jacobians; it should've been _a priori_.
+
+Also, the process by which I came to this derivation was quite interesting. See [this video by Another Roof](https://www.youtube.com/watch?v=6_wDiBVttTM) which introduced me to thinking about determinants through a beautiful combinatorial/algebraic interpretation.
+
+There's two major questions though with my derivation: how in the world does $dq^2=0$ and $dqdp = -dpdq$?
+
+# And about that...
+
+> Anyways, take your beer back. Explain what's going on.
+
+Yeah, there were a lot of "magic tricks"...
+
+Some physicists in the audience might think, oh, I'm at least familiar with "$dq^2=0$" because that's what you do with Taylor series; I believed for similar reasons, too, initially. However, apparently, that's not the right reason that fact holds!
+
+Actually, this warrants a slightly better understanding of what $dxdydz$ are doing together in the triple integral.
+
+You have to treat the operation in between differentials as _wedge products_, and then objects like
+
+$$
+dp\wedge dq
+$$
+
+and
+
+$$
+dp\wedge dq\wedge dt
+$$
+
+are actually oriented area and volume elements. 
+
+Out of this, you get the "magic" we used earlier; in particular, because it's an oriented area element, $dp\wedge dq=-dq \wedge dp$. Following $dq\wedge dq=-dq\wedge dq$, $dq\wedge dq=0$. The same logic applies for oriented volume elements. The notation definitely is confusing. However, the complexity of this topic and these nuances are what's putting this subject off for a later time.

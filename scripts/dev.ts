@@ -13,11 +13,14 @@ type ManagedProcess = ReturnType<typeof Bun.spawn>;
 
 function spawnProcess(
     cmd: string[],
-    options: { stdin?: "ignore" | "inherit" } = {},
+    options: {
+        env?: Record<string, string>;
+        stdin?: "ignore" | "inherit";
+    } = {},
 ) {
     return Bun.spawn(cmd, {
         cwd: root,
-        env: Bun.env,
+        env: { ...Bun.env, ...options.env },
         stdin: options.stdin === "inherit" ? "inherit" : null,
         stdout: "inherit",
         stderr: "inherit",
@@ -62,7 +65,10 @@ const astroProcess = spawnProcess(
         "dev",
         ...astroArgs,
     ],
-    { stdin: "inherit" },
+    {
+        env: { CONTENT_PREVIEW: "true" },
+        stdin: "inherit",
+    },
 );
 
 const childProcesses = [watchProcess, astroProcess];

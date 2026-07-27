@@ -1,26 +1,21 @@
 # sreyas.is
 
-Astro site repo with writing and page content kept in a separate git repo.
+Astro site with published writing committed under `src/content`. Private
+content lives in the separate `sreyassabbani/content` repository.
 
-## Recommended layout
+## Content layout
 
 ```text
 workspace/
-  content/  # content repo
-  sreyas.is/ # this repo
+  content/   # private source of truth
+  sreyas.is/
+    src/content/          # tracked public snapshot
+    src/content-preview/  # ignored local preview mirror
 ```
 
-`src/content` is not committed. It is generated automatically before `bun run dev` and `bun run build`.
-By default, only files tracked by git in the content repo are synced into the site repo; untracked drafts, scratch files, repo metadata, and the content repo `README.md` / `LICENSE` stay out of `src/content`.
-
-## How mounting works
-
-- If `CONTENT_DIR` is set, the site copies content from that path.
-- Otherwise it looks for `~/workflow/content`.
-- If that does not exist, it falls back to a sibling repo at `../content`.
-- If neither exists, it creates an empty `src/content` directory so the site still builds.
-
-That keeps Astro's content collection setup unchanged while avoiding submodules entirely. The copy step is important because MDX files can use relative imports that need to resolve from inside the site repo.
+Production and CI build only from `src/content`, so they do not need access to
+the private repository. The private content repository publishes eligible
+entries by committing a generated snapshot here.
 
 ## Local development
 
@@ -33,63 +28,58 @@ bun install
 bun run dev
 ```
 
-While `bun run dev` is running, the site watches `~/workflow/content` or `CONTENT_DIR` and re-syncs `src/content` automatically whenever the content repo changes.
+`bun run dev` mirrors the private repository into the ignored
+`src/content-preview` directory and watches it for changes. Astro reads that
+preview directory only in development; normal builds continue to read the
+tracked public snapshot.
 
-If you want drafts and other untracked files to appear temporarily during local development, run:
+To include files that have not yet been committed in the private repository:
 
 ```bash
 bun run dev -- --show-untracked
 ```
 
-That mode includes untracked content files while the dev command is alive, then restores `src/content` back to tracked-only content when the process exits normally.
+The related commands are:
 
-## Helix / Nix / direnv
+- `bun run content:sync` refreshes the private preview mirror.
+- `bun run content:watch` keeps the preview mirror synchronized.
+- `bun run content:sync -- --show-untracked` includes untracked source files.
+
+## Publication
+
+Content frontmatter must contain `publish: true` before it can become public.
+Posts publish at 11:59 PM America/New_York on their `pubDate`; pages publish
+immediately.
+
+The private repository's workflow runs after source pushes, manually, and at
+the primary and retry publication times. It:
+
+1. Generates the eligible snapshot into `src/content`.
+2. Builds and validates the public site.
+3. Commits and pushes only when the public snapshot changed.
+
+Private entry dependencies live under per-entry directories such as
+`posts/components/<post-name>`. Astro's collections load only top-level entry
+documents, so dependency files cannot become routes themselves.
+
+## Helix, Nix, and direnv
 
 - `flake.nix` provides `bun`, `node`, and `nu`.
-- The Nix shell prepends `node_modules/.bin` to `PATH`, so repo-local tools like `astro-ls` and `typescript-language-server` are visible to Helix.
-- `.helix/languages.toml` points `.astro`, `.ts`, `.tsx`, `.js`, and `.jsx` files at the right language servers without needing global installs.
-- `tsconfig.json` enables `@astrojs/ts-plugin`, which is what teaches TypeScript-aware editors how to understand `.astro` imports outside VS Code.
-- `bun run typecheck` runs `astro check`, which covers both `.astro` files and normal TypeScript files.
-- `bun run content:sync` refreshes the generated `src/content` mount from `~/workflow/content` or `CONTENT_DIR`.
-- `bun run content:watch` keeps the generated mount in sync continuously while you work.
-- `bun run content:sync -- --show-untracked` and `bun run content:watch -- --show-untracked` temporarily include untracked files too.
+- The Nix shell prepends `node_modules/.bin` to `PATH`.
+- `.helix/languages.toml` configures Astro and TypeScript language servers.
+- `tsconfig.json` enables `@astrojs/ts-plugin`.
+- `bun run typecheck` checks Astro and TypeScript files.
 
-If you launch Helix from Nushell, make sure your Nushell config loads `direnv` first so the flake shell environment reaches `hx`.
+If Helix is launched from Nushell, ensure the Nushell configuration loads
+`direnv` first so the flake environment reaches `hx`.
 
-## Formatting
+## Formatting and checks
 
-Biome owns formatting and linting for the repo. Astro files are the only exception: `*.astro` is excluded from Biome and formatted with Prettier plus `prettier-plugin-astro`.
+Biome owns formatting and linting except for `*.astro`, which uses Prettier
+with `prettier-plugin-astro`.
 
-- `bun run fmt` formats everything.
-- `bun run check` runs Biome checks plus Astro formatting checks.
-- `bun run fmt:biome` and `bun run fmt:astro` are the narrow escape hatches.
-
-## Pre-commit sync
-
-This repo installs a versioned `pre-commit` hook through `simple-git-hooks`.
-
-- Every site-repo commit re-syncs `src/content` from the real content source.
-- Before overwriting the generated mount, it writes a timestamped backup to `.content-sync-backups/`.
-- If `src/content` has staged files that are not tracked in `~/workflow/content`, the commit is blocked.
-- `~/workflow/content` is the source of truth. `src/content` stays generated and gitignored.
-
-## Deploy pattern
-
-The deploy workflow checks out two separate repos:
-
-```text
-/
-  content/
-  site/
-```
-
-Then it builds from `site/`. The build step sets `CONTENT_DIR=../content`, so the `prebuild` hook syncs the checked out content repo into `site/src/content` automatically.
-
-Content pushes can trigger this deploy workflow directly through a `repository_dispatch` event. To enable that, add a `SITE_REPO_DISPATCH_TOKEN` secret in the content repo with permission to dispatch workflows in `sreyassabbani/sreyas.is`.
-
-## Why this setup is cleaner than submodules
-
-- No submodule init/update workflow.
-- Content history and permissions stay isolated.
-- The site repo builds the same way locally and in CI.
-- Astro routes and collection code do not need to know where content came from.
+- `bun run fmt`
+- `bun run check`
+- `bun run typecheck`
+- `bun run build`
+- `bun run ci`

@@ -5,10 +5,19 @@ import { Glob } from "bun";
 
 const root = process.cwd();
 const homePath = Bun.env.HOME ?? "";
-export const mountPath = path.resolve(root, "src/content");
+export const mountPath = path.resolve(root, "src/content-preview");
 export const backupDraftMirrorPath = path.join("/tmp", "sreyas.is-content-bak");
-export const ignoredPathSegments = new Set([".git", ".github"]);
-export const ignoredSourceFiles = new Set(["LICENSE", "README.md"]);
+export const ignoredPathSegments = new Set([
+    ".git",
+    ".github",
+    "drafts",
+    "scripts",
+]);
+export const ignoredSourceFiles = new Set([
+    ".gitignore",
+    "LICENSE",
+    "README.md",
+]);
 export const ignoredSourceBasenames = new Set([".DS_Store"]);
 export const showUntrackedFlag = "--show-untracked";
 const backupDraftGlob = new Glob("**/*-bak*.mdx");
@@ -378,7 +387,7 @@ export async function ensureMountedContent(
             });
         const syncModeLabel = includeUntracked ? "files" : "tracked files";
         console.log(
-            `${logPrefix} synced ${totalFileCount} ${syncModeLabel} from ${path.relative(root, sourcePath)} -> src/content (${changedFileCount} changed, ${removedFileCount} removed)`,
+            `${logPrefix} synced ${totalFileCount} ${syncModeLabel} from ${path.relative(root, sourcePath)} -> src/content-preview (${changedFileCount} changed, ${removedFileCount} removed)`,
         );
         return;
     }
@@ -386,7 +395,7 @@ export async function ensureMountedContent(
     await rm(mountPath, { force: true, recursive: true });
     await mkdir(mountPath, { recursive: true });
     console.warn(
-        `${logPrefix} no content repo found at ${sourcePath}; using empty src/content`,
+        `${logPrefix} no content repo found at ${sourcePath}; using empty src/content-preview`,
     );
 }
 
