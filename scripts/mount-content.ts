@@ -13,7 +13,11 @@ export const ignoredPathSegments = new Set([
     "drafts",
     "scripts",
 ]);
-export const ignoredSourceFiles = new Set([".gitignore", "LICENSE", "README.md"]);
+export const ignoredSourceFiles = new Set([
+    ".gitignore",
+    "LICENSE",
+    "README.md",
+]);
 export const ignoredSourceBasenames = new Set([".DS_Store"]);
 export const showUntrackedFlag = "--show-untracked";
 const backupDraftGlob = new Glob("**/*-bak*.mdx");
