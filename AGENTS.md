@@ -8,6 +8,8 @@ Environment: using Nix Flakes and `direnv`
 
 Repository is hosted at `sreyassabbani/sreyas.is` on GitHub. Feel free to use `gh` CLI in this environment.
 
+Inspect the relevant files directly when necessary: `flake.nix`, `.envrc`, `.helix/`, and `package.json`.
+
 Content is generated into `sreyas.is/src/content` from a separate content repo. On Sreyas's machine, it is at `~/workflow/content`. That folder is version-tracked and its repository is also hosted on GitHub, at `sreyassabbani/content`. Anything inside `sreyas.is/src/content` is disposable build input.
 
 Never edit any content unless explicitly told so. In the case when permitted, your edit destinations will be `~/workflow/content` on Sreyas's machine.
