@@ -1,15 +1,25 @@
 import {
     ensureMountedContent,
+    onlyPublishIntentFlag,
     parseMountContentArgs,
-    showUntrackedFlag,
     syncBackupDraftMirror,
 } from "./mount-content";
 
 const root = process.cwd();
 const args = process.argv.slice(2);
-const { includeUntracked } = parseMountContentArgs(args);
-const astroArgs = args.filter((arg) => arg !== showUntrackedFlag);
+const onlyPublishedFlag = "--only-published";
+const onlyPublished = args.includes(onlyPublishedFlag);
+const { mode } = parseMountContentArgs(args);
+const astroArgs = args.filter(
+    (arg) => arg !== onlyPublishIntentFlag && arg !== onlyPublishedFlag,
+);
 type ManagedProcess = ReturnType<typeof Bun.spawn>;
+
+if (onlyPublished && mode === "publish-intent") {
+    throw new Error(
+        `${onlyPublishIntentFlag} and ${onlyPublishedFlag} cannot be used together`,
+    );
+}
 
 function spawnProcess(
     cmd: string[],
@@ -42,20 +52,26 @@ const terminate = (
     }
 };
 
-await ensureMountedContent({ includeUntracked });
-await syncBackupDraftMirror();
+const childProcesses: ManagedProcess[] = [];
 
-const watchArgs = ["--skip-initial-sync"];
-if (includeUntracked) {
-    watchArgs.push(showUntrackedFlag);
+if (!onlyPublished) {
+    await ensureMountedContent({ mode });
+    await syncBackupDraftMirror();
+
+    const watchArgs = ["--skip-initial-sync"];
+    if (mode === "publish-intent") {
+        watchArgs.push(onlyPublishIntentFlag);
+    }
+
+    childProcesses.push(
+        spawnProcess([
+            process.execPath,
+            "--bun",
+            "./scripts/watch-content.ts",
+            ...watchArgs,
+        ]),
+    );
 }
-
-const watchProcess = spawnProcess([
-    process.execPath,
-    "--bun",
-    "./scripts/watch-content.ts",
-    ...watchArgs,
-]);
 
 const astroProcess = spawnProcess(
     [
@@ -66,12 +82,11 @@ const astroProcess = spawnProcess(
         ...astroArgs,
     ],
     {
-        env: { CONTENT_PREVIEW: "true" },
+        env: { CONTENT_PREVIEW: onlyPublished ? "false" : "true" },
         stdin: "inherit",
     },
 );
-
-const childProcesses = [watchProcess, astroProcess];
+childProcesses.push(astroProcess);
 let shuttingDown = false;
 
 async function shutdown(exitCode = 0, signal: NodeJS.Signals = "SIGTERM") {
@@ -85,18 +100,6 @@ async function shutdown(exitCode = 0, signal: NodeJS.Signals = "SIGTERM") {
         childProcesses.map((process) => waitForExit(process)),
     );
 
-    if (includeUntracked) {
-        try {
-            await ensureMountedContent({ logPrefix: "[dev:cleanup]" });
-        } catch (error) {
-            console.error(
-                "[dev:cleanup] failed to restore tracked-only mount",
-                error,
-            );
-            exitCode = exitCode || 1;
-        }
-    }
-
     process.exit(exitCode);
 }
 
@@ -107,14 +110,11 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
 }
 
 const { code } = await Promise.race([
-    waitForExit(watchProcess).then((exitCode) => ({
-        name: "watch",
-        code: exitCode,
-    })),
-    waitForExit(astroProcess).then((exitCode) => ({
-        name: "astro",
-        code: exitCode,
-    })),
+    ...childProcesses.map((childProcess) =>
+        waitForExit(childProcess).then((exitCode) => ({
+            code: exitCode,
+        })),
+    ),
 ]);
 
 await shutdown(code ?? 0);

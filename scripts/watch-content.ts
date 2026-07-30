@@ -14,7 +14,7 @@ const root = process.cwd();
 const logPrefix = "[content-watch]";
 const args = process.argv.slice(2);
 const skipInitialSync = args.includes("--skip-initial-sync");
-const { includeUntracked } = parseMountContentArgs(args);
+const { mode } = parseMountContentArgs(args);
 
 let watcher: FSWatcher | null = null;
 let watchedSourcePath: string | null = null;
@@ -51,7 +51,7 @@ async function syncMount() {
     syncInFlight = true;
 
     try {
-        await ensureMountedContent({ includeUntracked, logPrefix });
+        await ensureMountedContent({ logPrefix, mode });
         await syncBackupDraftMirror({ logPrefix });
 
         const nextSourcePath = await resolveSourcePath();
@@ -149,20 +149,6 @@ async function shutdownAndExit() {
 
     shutdown();
 
-    if (includeUntracked) {
-        try {
-            await ensureMountedContent({
-                logPrefix: "[content-watch:cleanup]",
-            });
-        } catch (error) {
-            console.error(
-                "[content-watch:cleanup] failed to restore tracked-only mount",
-                error,
-            );
-            process.exit(1);
-        }
-    }
-
     process.exit(0);
 }
 
@@ -175,7 +161,7 @@ process.on("SIGTERM", () => {
 });
 
 if (!skipInitialSync) {
-    await ensureMountedContent({ includeUntracked, logPrefix });
+    await ensureMountedContent({ logPrefix, mode });
     await syncBackupDraftMirror({ logPrefix });
 }
 

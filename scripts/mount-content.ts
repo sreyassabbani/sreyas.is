@@ -1,5 +1,14 @@
 import type { Dirent } from "node:fs";
-import { cp, lstat, mkdir, readdir, rm, stat, unlink } from "node:fs/promises";
+import {
+    cp,
+    lstat,
+    mkdir,
+    readdir,
+    readFile,
+    rm,
+    stat,
+    unlink,
+} from "node:fs/promises";
 import path from "node:path";
 import { Glob } from "bun";
 
@@ -19,8 +28,10 @@ export const ignoredSourceFiles = new Set([
     "README.md",
 ]);
 export const ignoredSourceBasenames = new Set([".DS_Store"]);
-export const showUntrackedFlag = "--show-untracked";
+export const onlyPublishIntentFlag = "--only-publish-intent";
+export type ContentPreviewMode = "all" | "publish-intent";
 const backupDraftGlob = new Glob("**/*-bak*.mdx");
+const entryPattern = /^(pages|posts)\/([^/]+)\.(md|mdx)$/i;
 
 export async function pathExists(targetPath: string) {
     try {
@@ -90,24 +101,18 @@ export function listTrackedSourceFiles(sourcePath: string) {
         .filter((relativePath) => !isIgnoredRelativePath(relativePath));
 }
 
-function listSourceFiles(
-    sourcePath: string,
-    options: { includeUntracked?: boolean } = {},
-) {
-    const { includeUntracked = false } = options;
-    const gitArgs = includeUntracked
-        ? [
-              "-C",
-              sourcePath,
-              "ls-files",
-              "-z",
-              "--cached",
-              "--others",
-              "--exclude-standard",
-          ]
-        : ["-C", sourcePath, "ls-files", "-z"];
+function listSourceFiles(sourcePath: string) {
     const result = Bun.spawnSync({
-        cmd: ["git", ...gitArgs],
+        cmd: [
+            "git",
+            "-C",
+            sourcePath,
+            "ls-files",
+            "-z",
+            "--cached",
+            "--others",
+            "--exclude-standard",
+        ],
         stdout: "pipe",
         stderr: "pipe",
     });
@@ -124,6 +129,65 @@ function listSourceFiles(
         .split("\0")
         .filter(Boolean)
         .filter((relativePath) => !isIgnoredRelativePath(relativePath));
+}
+
+function parseFrontmatter(source: string, filePath: string) {
+    const match = source.match(/^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/);
+    if (!match) {
+        throw new Error(`${filePath}: missing YAML frontmatter`);
+    }
+
+    const parsed = Bun.YAML.parse(match[1]);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error(`${filePath}: frontmatter must be a YAML object`);
+    }
+
+    return parsed as Record<string, unknown>;
+}
+
+export async function selectPublishIntentFiles(
+    sourcePath: string,
+    sourceFiles: string[],
+) {
+    const selectedEntryDependencies: string[] = [];
+    const selectedFiles = new Set<string>();
+
+    for (const relativePath of sourceFiles) {
+        const normalizedPath = relativePath.replaceAll("\\", "/");
+        const entryMatch = normalizedPath.match(entryPattern);
+
+        if (!entryMatch) {
+            continue;
+        }
+
+        const frontmatter = parseFrontmatter(
+            await readFile(path.join(sourcePath, relativePath), "utf8"),
+            normalizedPath,
+        );
+        if (frontmatter.publish !== true) {
+            continue;
+        }
+
+        selectedFiles.add(relativePath);
+        selectedEntryDependencies.push(
+            `${entryMatch[1].toLowerCase()}/components/${entryMatch[2]}/`,
+        );
+    }
+
+    for (const relativePath of sourceFiles) {
+        const normalizedPath = relativePath.replaceAll("\\", "/");
+        if (
+            selectedEntryDependencies.some((dependencyPath) =>
+                normalizedPath.startsWith(dependencyPath),
+            )
+        ) {
+            selectedFiles.add(relativePath);
+        }
+    }
+
+    return sourceFiles.filter((relativePath) =>
+        selectedFiles.has(relativePath),
+    );
 }
 
 async function listMountedFiles(
@@ -292,9 +356,21 @@ export async function syncBackupDraftMirror(
 
 async function syncSourceFiles(
     sourcePath: string,
-    options: { includeUntracked?: boolean } = {},
+    options: { mode?: ContentPreviewMode } = {},
 ) {
-    const sourceFiles = listSourceFiles(sourcePath, options);
+    const { mode = "all" } = options;
+    const existingSourceFiles: string[] = [];
+
+    for (const relativePath of listSourceFiles(sourcePath)) {
+        if (await pathExists(path.join(sourcePath, relativePath))) {
+            existingSourceFiles.push(relativePath);
+        }
+    }
+
+    const sourceFiles =
+        mode === "publish-intent"
+            ? await selectPublishIntentFiles(sourcePath, existingSourceFiles)
+            : existingSourceFiles;
     const sourceFileSet = new Set(sourceFiles);
     let changedFileCount = 0;
     let removedFileCount = 0;
@@ -339,13 +415,15 @@ async function syncSourceFiles(
 type EnsureMountedContentOptions = {
     backupExisting?: boolean;
     backupRoot?: string;
-    includeUntracked?: boolean;
     logPrefix?: string;
+    mode?: ContentPreviewMode;
 };
 
 export function parseMountContentArgs(argv = process.argv.slice(2)) {
     return {
-        includeUntracked: argv.includes(showUntrackedFlag),
+        mode: argv.includes(onlyPublishIntentFlag)
+            ? ("publish-intent" as const)
+            : ("all" as const),
     };
 }
 
@@ -355,8 +433,8 @@ export async function ensureMountedContent(
     const {
         backupExisting = false,
         backupRoot = path.resolve(root, ".content-sync-backups"),
-        includeUntracked = false,
         logPrefix = "[mount-content]",
+        mode = "all",
     } = options;
     const sourcePath = await resolveSourcePath();
     const sourceExists = await pathExists(sourcePath);
@@ -383,9 +461,12 @@ export async function ensureMountedContent(
         await mkdir(mountPath, { recursive: true });
         const { changedFileCount, removedFileCount, totalFileCount } =
             await syncSourceFiles(sourcePath, {
-                includeUntracked,
+                mode,
             });
-        const syncModeLabel = includeUntracked ? "files" : "tracked files";
+        const syncModeLabel =
+            mode === "publish-intent"
+                ? "publish-intent files"
+                : "working-tree files";
         console.log(
             `${logPrefix} synced ${totalFileCount} ${syncModeLabel} from ${path.relative(root, sourcePath)} -> src/content-preview (${changedFileCount} changed, ${removedFileCount} removed)`,
         );

@@ -9,6 +9,7 @@
         "build": "bun --bun ./node_modules/.bin/astro build",
         "preview": "bun --bun ./node_modules/.bin/astro preview",
         "astro": "bun --bun ./node_modules/.bin/astro",
+        "test": "bun test ./scripts",
         "typecheck": "bun --bun ./node_modules/.bin/astro check",
         "fmt": "bun run fmt:biome && bun run fmt:astro",
         "fmt:astro": "bun --bun ./node_modules/.bin/prettier --write \"**/*.astro\"",
@@ -20,7 +21,7 @@
         "lint:fix": "bun --bun ./node_modules/.bin/biome lint --write .",
         "check": "bun --bun ./node_modules/.bin/biome check . && bun run fmt:astro:check",
         "check:fix": "bun --bun ./node_modules/.bin/biome check --write . && bun run fmt:astro",
-        "ci": "bun run check && bun run typecheck && bun run build"
+        "ci": "bun run test && bun run check && bun run typecheck && bun run build"
     },
     "dependencies": {
         "@astrojs/mdx": "^4.3.12",
