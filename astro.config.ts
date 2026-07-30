@@ -1,6 +1,12 @@
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
+import {
+    transformerMetaHighlight,
+    transformerNotationDiff,
+    transformerNotationFocus,
+    transformerNotationHighlight,
+} from "@shikijs/transformers";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "astro/config";
 import type { Root } from "hast";
@@ -44,7 +50,13 @@ export default defineConfig({
                 light: "catppuccin-latte",
                 dark: "catppuccin-frappe",
             },
-            wrap: true,
+            wrap: false,
+            transformers: [
+                transformerMetaHighlight(),
+                transformerNotationDiff(),
+                transformerNotationHighlight(),
+                transformerNotationFocus(),
+            ],
         },
     },
     vite: {

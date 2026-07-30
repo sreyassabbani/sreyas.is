@@ -1,0 +1,90 @@
+.content-prose pre.astro-code {
+    --shiki-highlight-background: color-mix(
+        in oklab,
+        var(--primary) 12%,
+        transparent
+    );
+    --shiki-highlight-border: color-mix(
+        in oklab,
+        var(--primary) 72%,
+        transparent
+    );
+    --shiki-diff-add-background: color-mix(
+        in oklab,
+        oklch(0.58 0.14 150) 18%,
+        transparent
+    );
+    --shiki-diff-add-border: oklch(0.55 0.14 150);
+    --shiki-diff-remove-background: color-mix(
+        in oklab,
+        var(--destructive) 16%,
+        transparent
+    );
+    --shiki-diff-remove-border: color-mix(
+        in oklab,
+        var(--destructive) 82%,
+        transparent
+    );
+}
+
+.content-prose pre.astro-code .line.highlighted,
+.content-prose pre.astro-code .line.diff {
+    box-sizing: border-box;
+    width: max-content;
+    min-width: calc(100% + 2rem);
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+}
+
+.content-prose pre.astro-code .line.highlighted {
+    background: var(--shiki-highlight-background);
+    box-shadow: inset 3px 0 0 var(--shiki-highlight-border);
+}
+
+.content-prose pre.astro-code .line.diff {
+    position: relative;
+}
+
+.content-prose pre.astro-code .line.diff::before {
+    position: absolute;
+    left: 0.3rem;
+    width: 0.5rem;
+    font-weight: 700;
+}
+
+.content-prose pre.astro-code .line.diff.add {
+    background: var(--shiki-diff-add-background);
+    box-shadow: inset 3px 0 0 var(--shiki-diff-add-border);
+}
+
+.content-prose pre.astro-code .line.diff.add::before {
+    color: var(--shiki-diff-add-border);
+    content: "+";
+}
+
+.content-prose pre.astro-code .line.diff.remove {
+    background: var(--shiki-diff-remove-background);
+    box-shadow: inset 3px 0 0 var(--shiki-diff-remove-border);
+}
+
+.content-prose pre.astro-code .line.diff.remove::before {
+    color: var(--shiki-diff-remove-border);
+    content: "−";
+}
+
+.content-prose pre.astro-code.has-focused .line:not(.focused) {
+    opacity: 0.38;
+    transition: opacity 160ms ease;
+}
+
+.content-prose
+    pre.astro-code.has-focused:is(:hover, :focus-within)
+    .line:not(.focused) {
+    opacity: 0.68;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .content-prose pre.astro-code.has-focused .line:not(.focused) {
+        transition: none;
+    }
+}
