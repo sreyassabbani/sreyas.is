@@ -7,9 +7,13 @@ const { className = "" } = Astro.props;
 ---
 
 <div class:list={["my-10 flex justify-center", className]} aria-hidden="true">
-    <span class="flex items-center gap-2 text-muted-foreground/80">
-        <span class="size-1 rounded-full bg-current"></span>
-        <span class="size-1 rounded-full bg-current"></span>
-        <span class="size-1 rounded-full bg-current"></span>
-    </span>
+    <svg
+        class="h-[6px] w-[30px] text-muted-foreground/80"
+        viewBox="0 0 30 6"
+        fill="currentColor"
+    >
+        <circle cx="3" cy="3" r="2"></circle>
+        <circle cx="15" cy="3" r="2"></circle>
+        <circle cx="27" cy="3" r="2"></circle>
+    </svg>
 </div>
