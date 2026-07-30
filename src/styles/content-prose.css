@@ -1,0 +1,519 @@
+@layer components {
+    .content-prose {
+        @apply prose prose-neutral max-w-none text-[0.98rem] leading-7 text-foreground;
+    }
+
+    .dark .content-prose {
+        @apply prose-invert;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        ) {
+        @apply mt-0 mb-4;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(h1, h2, h3, h4, h5, h6):not(
+                    :where([class~="not-prose"], [class~="not-prose"] *)
+                )
+        ) {
+        @apply font-heading font-semibold tracking-tight text-foreground;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(h1):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        ) {
+        @apply mt-16 mb-5 border-b border-border pb-3 text-3xl;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(h2):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        ) {
+        @apply mt-12 mb-4 border-b border-border pb-2 text-2xl;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(h3):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        ) {
+        @apply mt-9 mb-3 text-[1.45rem];
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(h4):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        ) {
+        @apply mt-7 mb-3 text-lg;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(strong):not(
+                    :where([class~="not-prose"], [class~="not-prose"] *)
+                )
+        ) {
+        @apply font-semibold text-foreground;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(ul):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        ) {
+        @apply my-3 list-outside list-disc pl-5;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(ol):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        ) {
+        @apply my-3 list-outside list-decimal pl-5;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(li):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        ) {
+        @apply my-0.5;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(li):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        )::marker {
+        @apply text-muted-foreground;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(
+            :where(hr):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        ) {
+        @apply my-8 border-border;
+    }
+
+    .content-prose:where(:not(.content-prose--short))
+        :is(h1, h2, h3, h4, h5, h6)[id] {
+        @apply scroll-mt-24;
+    }
+
+    .content-prose:where(:not(.content-prose--short)) img {
+        @apply my-6 rounded-xl;
+    }
+
+    .content-prose--short {
+        @apply text-sm leading-7;
+    }
+
+    .content-prose--short
+        :is(
+            :where(p):not(:where([class~="not-prose"], [class~="not-prose"] *))
+        ) {
+        @apply mt-0 mb-3;
+    }
+
+    @media (min-width: 40rem) {
+        .content-prose:where(:not(.content-prose--short)) {
+            @apply text-base leading-8;
+        }
+
+        .content-prose:where(:not(.content-prose--short))
+            :is(
+                :where(h1):not(
+                        :where([class~="not-prose"], [class~="not-prose"] *)
+                    )
+            ) {
+            @apply mt-20 text-4xl;
+        }
+
+        .content-prose:where(:not(.content-prose--short))
+            :is(
+                :where(h2):not(
+                        :where([class~="not-prose"], [class~="not-prose"] *)
+                    )
+            ) {
+            @apply mt-14 text-3xl;
+        }
+
+        .content-prose:where(:not(.content-prose--short))
+            :is(
+                :where(h3):not(
+                        :where([class~="not-prose"], [class~="not-prose"] *)
+                    )
+            ) {
+            @apply mt-10 text-2xl;
+        }
+
+        .content-prose:where(:not(.content-prose--short))
+            :is(
+                :where(h4):not(
+                        :where([class~="not-prose"], [class~="not-prose"] *)
+                    )
+            ) {
+            @apply text-xl;
+        }
+
+        .content-prose:where(:not(.content-prose--short))
+            :is(
+                :where(ul, ol):not(
+                        :where([class~="not-prose"], [class~="not-prose"] *)
+                    )
+            ) {
+            @apply pl-6;
+        }
+    }
+
+    .content-prose a:not([data-plain-link]) {
+        color: inherit !important;
+        font-weight: inherit !important;
+        text-decoration-line: underline !important;
+        text-decoration-style: dotted !important;
+        text-decoration-color: color-mix(
+            in oklab,
+            var(--primary) 54%,
+            transparent
+        ) !important;
+        text-decoration-thickness: 1px !important;
+        text-underline-offset: 0.22em !important;
+        transition:
+            color 160ms ease,
+            text-decoration-color 160ms ease;
+        overflow-wrap: anywhere;
+    }
+
+    .content-prose a:not([data-plain-link]):hover {
+        color: var(--primary) !important;
+        text-decoration-style: wavy !important;
+        text-decoration-color: var(--primary) !important;
+    }
+
+    .content-prose :is(span, mark) > :is(strong, em) {
+        color: inherit;
+    }
+
+    .content-prose--hide-headings :is(h1, h2, h3, h4, h5, h6)[id] {
+        height: 0;
+        margin-block: 0 !important;
+        border: 0 !important;
+        padding-block: 0 !important;
+        overflow: hidden;
+        color: transparent !important;
+    }
+
+    .content-prose .footnotes {
+        position: relative;
+        margin-top: 5rem !important;
+        border-top: 1px solid
+            color-mix(in oklab, var(--border) 82%, transparent);
+        padding-top: 2rem;
+    }
+
+    .content-prose .footnotes::before {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        padding-inline: 0.85rem;
+        background: var(--background);
+        color: var(--muted-foreground);
+        content: "footnotes";
+        font-family: var(--font-brand);
+        font-size: 0.68rem;
+        letter-spacing: 0.02em;
+        line-height: 1;
+        transform: translate(-50%, -50%);
+    }
+
+    :where(:not(pre) > code) {
+        @apply rounded-md border border-border/70 bg-muted/75 px-1.5 py-0.5 font-mono text-[0.95em] font-normal text-primary;
+        color: oklch(0.58 0.12 247.5);
+        font-weight: 400;
+    }
+
+    .content-prose :not(pre) > code {
+        @apply rounded-md border border-border/70 bg-muted/75 px-1.5 py-0.5 font-mono text-[0.95em] font-normal;
+        color: oklch(0.58 0.12 247.5) !important;
+        font-weight: 400 !important;
+    }
+
+    .dark .content-prose :not(pre) > code {
+        color: oklch(0.76 0.085 247.5) !important;
+    }
+
+    .dark :where(:not(pre) > code) {
+        color: oklch(0.76 0.085 247.5);
+    }
+
+    .margin-note-anchor {
+        display: inline;
+    }
+
+    .margin-note {
+        @apply mx-1 inline rounded-md border border-border/70 bg-secondary/45 px-1.5 py-0.5 text-sm text-muted-foreground;
+        -webkit-box-decoration-break: clone;
+        box-decoration-break: clone;
+        line-height: inherit;
+    }
+
+    .margin-note__marker {
+        @apply mr-1 font-mono text-xs text-primary;
+    }
+
+    .margin-note > :first-child {
+        margin-top: 0;
+    }
+
+    .margin-note > :last-child {
+        margin-bottom: 0;
+    }
+
+    @media (min-width: 80rem) {
+        .margin-note {
+            float: right;
+            clear: right;
+            width: 15rem;
+            margin: 0 -17rem 0.5rem 1.5rem;
+            border: 0;
+            border-left: 1px solid
+                color-mix(in oklab, var(--border) 74%, transparent);
+            border-radius: 0;
+            background: transparent;
+            padding: 0 0 0 0.85rem;
+            font-size: 0.8rem;
+            line-height: 1.55;
+        }
+    }
+
+    .content-prose :not(pre) > code::before,
+    .content-prose :not(pre) > code::after {
+        content: none !important;
+    }
+
+    .content-prose pre {
+        @apply my-6 border-0 bg-transparent p-0 shadow-none;
+    }
+
+    .content-prose pre.astro-code {
+        @apply relative overflow-x-auto rounded-xl border px-4 py-3 font-mono text-sm leading-normal sm:text-base;
+        border-color: color-mix(in oklab, var(--border) 82%, transparent);
+        background-color: var(--shiki-light-bg, var(--muted)) !important;
+        white-space: pre !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        font-variant-ligatures: none;
+    }
+
+    .content-prose pre.astro-code code {
+        @apply block min-w-full border-0 bg-transparent p-0 font-normal text-inherit shadow-none;
+        line-height: inherit;
+        white-space: normal !important;
+    }
+
+    .content-prose pre.astro-code span {
+        font-style: normal !important;
+        font-weight: 400 !important;
+        text-decoration: none !important;
+        letter-spacing: normal;
+    }
+
+    .content-prose pre.astro-code .line {
+        display: block;
+        line-height: 1.5;
+        min-height: 1.5em;
+        white-space: pre;
+    }
+
+    .content-prose pre.astro-code .line:last-child:empty {
+        display: none;
+    }
+
+    .dark .content-prose pre.astro-code {
+        background-color: var(--shiki-dark-bg, var(--secondary)) !important;
+        color: var(--shiki-dark, var(--foreground)) !important;
+    }
+
+    .dark .content-prose pre.astro-code span {
+        color: var(--shiki-dark, inherit) !important;
+    }
+
+    .content-prose blockquote {
+        @apply my-5 rounded-lg px-3.5 py-2.5 text-[0.98em] text-muted-foreground;
+        border: 1px solid color-mix(in oklab, var(--primary) 42%, var(--border)) !important;
+        background: color-mix(
+            in oklab,
+            var(--secondary) 68%,
+            var(--background)
+        );
+        font-style: normal !important;
+        quotes: none;
+    }
+
+    .content-prose blockquote,
+    .content-prose blockquote p {
+        color: var(--muted-foreground) !important;
+    }
+
+    .content-prose blockquote p:first-of-type::before,
+    .content-prose blockquote p:last-of-type::after {
+        content: none !important;
+    }
+
+    .content-prose blockquote > :first-child {
+        @apply mt-0;
+    }
+
+    .content-prose blockquote > :last-child {
+        @apply mb-0;
+    }
+
+    .content-prose blockquote p {
+        margin: 0 !important;
+    }
+
+    .content-prose blockquote p + p {
+        margin-top: 0.5rem !important;
+    }
+
+    .content-prose table {
+        @apply my-5 border-separate border-spacing-0 text-[0.92rem];
+        display: inline-table;
+        vertical-align: top;
+        width: fit-content;
+        min-width: min(100%, 28rem);
+        max-width: 100%;
+        border: 0;
+        background: transparent;
+    }
+
+    .content-prose thead th {
+        @apply border-b px-[0.9em] py-[0.62em] text-left font-sans text-[0.82rem] font-medium text-muted-foreground;
+        border-color: color-mix(in oklab, var(--border) 72%, transparent);
+        background: transparent;
+    }
+
+    .content-prose tbody td {
+        @apply px-[0.9em] py-[0.78em] text-left align-top;
+    }
+
+    .content-prose tbody tr + tr td {
+        border-top: 1px solid
+            color-mix(in oklab, var(--border) 62%, transparent);
+    }
+
+    .content-prose thead th:first-child {
+        padding-left: 0;
+    }
+
+    .content-prose thead th:last-child {
+        padding-right: 0;
+    }
+
+    .content-prose tbody td:first-child {
+        padding-left: 0;
+    }
+
+    .content-prose tbody td:last-child {
+        padding-right: 0;
+    }
+
+    .content-prose tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .content-prose tbody tr:nth-child(even) td {
+        background: transparent;
+    }
+
+    @media (max-width: 48rem) {
+        .content-prose table {
+            display: block;
+            width: 100%;
+            min-width: 0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+    }
+
+    .content-prose kbd::before,
+    .content-prose kbd::after {
+        content: none !important;
+    }
+
+    .content-prose kbd {
+        @apply inline-flex h-6 min-w-6 items-center justify-center rounded-sm bg-muted px-1.5 font-sans text-sm font-medium text-muted-foreground shadow-none;
+    }
+
+    .content-prose .content-closure {
+        @apply my-8 border-y;
+        border-color: color-mix(in oklab, var(--border) 82%, transparent);
+    }
+
+    .content-prose .content-closure__toggle {
+        @apply flex w-full items-baseline justify-between gap-6 py-3 text-left text-foreground transition-colors duration-200;
+        background: transparent;
+        border: 0;
+        font: inherit;
+    }
+
+    .content-prose .content-closure__toggle:hover .content-closure__title,
+    .content-prose .content-closure__toggle:hover .content-closure__status {
+        color: var(--primary);
+    }
+
+    .content-prose .content-closure__toggle:focus-visible {
+        outline: 2px solid color-mix(in oklab, var(--ring) 58%, transparent);
+        outline-offset: 6px;
+    }
+
+    .content-prose .content-closure__title {
+        @apply text-[1.02rem] leading-7 text-foreground;
+        font-family: var(--font-heading);
+        font-weight: 600;
+    }
+
+    .content-prose .content-closure__status {
+        @apply shrink-0 text-sm leading-6 text-muted-foreground transition-colors duration-200;
+    }
+
+    .content-prose .content-closure__panel {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .content-prose .content-closure[data-open="true"] .content-closure__panel {
+        grid-template-rows: 1fr;
+    }
+
+    .content-prose .content-closure__content {
+        min-height: 0;
+        overflow: hidden;
+    }
+
+    .content-prose
+        .content-closure[data-open="true"]
+        .content-closure__content {
+        padding-top: 1rem;
+        padding-bottom: 0.25rem;
+        border-top: 1px solid
+            color-mix(in oklab, var(--border) 74%, transparent);
+    }
+
+    .content-prose .content-closure__content > :first-child {
+        margin-top: 0;
+    }
+
+    .content-prose .content-closure__content > :last-child {
+        margin-bottom: 0;
+    }
+
+    .content-prose li > p {
+        @apply my-0;
+    }
+
+    .content-prose li + li {
+        @apply mt-0.5;
+    }
+}

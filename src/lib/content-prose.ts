@@ -1,5 +1,3 @@
-export const contentProseClass =
-    "content-prose prose prose-neutral dark:prose-invert max-w-none text-[0.98rem] leading-7 text-foreground sm:text-base sm:leading-8 prose-p:my-0 prose-p:mb-4 prose-headings:font-heading prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground prose-h1:mt-16 prose-h1:mb-5 prose-h1:border-b prose-h1:border-border prose-h1:pb-3 prose-h1:text-3xl sm:prose-h1:mt-20 sm:prose-h1:text-4xl prose-h2:mt-12 prose-h2:mb-4 prose-h2:border-b prose-h2:border-border prose-h2:pb-2 prose-h2:text-2xl sm:prose-h2:mt-14 sm:prose-h2:text-3xl prose-h3:mt-9 prose-h3:mb-3 prose-h3:text-[1.45rem] sm:prose-h3:mt-10 sm:prose-h3:text-2xl prose-h4:mt-7 prose-h4:mb-3 prose-h4:text-lg sm:prose-h4:text-xl prose-strong:text-foreground prose-strong:font-semibold prose-ul:my-3 prose-ul:list-disc prose-ul:list-outside prose-ul:pl-5 sm:prose-ul:pl-6 prose-ol:my-3 prose-ol:list-decimal prose-ol:list-outside prose-ol:pl-5 sm:prose-ol:pl-6 prose-li:my-0.5 prose-li:marker:text-muted-foreground prose-hr:my-8 prose-hr:border-border [&_h1[id]]:scroll-mt-24 [&_h2[id]]:scroll-mt-24 [&_h3[id]]:scroll-mt-24 [&_h4[id]]:scroll-mt-24 [&_h5[id]]:scroll-mt-24 [&_h6[id]]:scroll-mt-24 [&_img]:my-6 [&_img]:rounded-xl";
+export const contentProseClass = "content-prose";
 
-export const shortContentProseClass =
-    "content-prose prose prose-neutral dark:prose-invert max-w-none text-sm leading-7 text-foreground prose-p:my-0 prose-p:mb-3";
+export const shortContentProseClass = "content-prose content-prose--short";
