@@ -5,6 +5,7 @@
     "scripts": {
         "content:sync": "bun --bun ./scripts/mount-content.ts",
         "content:watch": "bun --bun ./scripts/watch-content.ts",
+        "capture:terminal": "bun --bun ./scripts/capture-terminal.ts",
         "dev": "bun --bun ./scripts/dev.ts",
         "build": "bun --bun ./node_modules/.bin/astro build",
         "preview": "bun --bun ./node_modules/.bin/astro preview",

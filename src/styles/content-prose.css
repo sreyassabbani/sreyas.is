@@ -27,14 +27,14 @@
         :is(
             :where(h1):not(:where([class~="not-prose"], [class~="not-prose"] *))
         ) {
-        @apply mt-16 mb-5 border-b border-border pb-3 text-3xl;
+        @apply mt-16 mb-5 text-3xl;
     }
 
     .content-prose:where(:not(.content-prose--short))
         :is(
             :where(h2):not(:where([class~="not-prose"], [class~="not-prose"] *))
         ) {
-        @apply mt-12 mb-4 border-b border-border pb-2 text-2xl;
+        @apply mt-12 mb-4 text-2xl;
     }
 
     .content-prose:where(:not(.content-prose--short))

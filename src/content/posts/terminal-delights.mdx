@@ -8,38 +8,36 @@ tags: ["cli", "software"]
 ---
 
 import EllipsisBreak from "@/components/EllipsisBreak.astro";
-
+import TerminalTranscript from "@/components/TerminalTranscript.astro";
+import yaziScreenshot from "./components/terminal-delights/media/yazi.png";
 
 I invite you to some fine dining ... in my terminal.
 
 <EllipsisBreak />
 
-### Internet speed test
+## System Information
+
+## Internet speed test
 
 From [`maaslalani/fast`](https://github.com/maaslalani/fast) (which is based on [`fast.com`](https://fast.com)):
-```
-sreysus [λ] fast
 
-  746.0 Mbps ⢠⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿  peak 751
-```
+<TerminalTranscript
+  label="Running an internet speed test with fast"
+  transcript={`sreysus [λ] fast
+
+  746.0 Mbps ⢠⣶⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿  peak 751`}
+/>
 
 Very neat.
 
-### Typing test
 
-From [`lemnos/tt`](https://github.com/lemnos/tt):
-```
-sreysus [λ] tt
-```
+## Fastfetch
 
-A nerdier version of [monkeytype](https://monkeytype.com)
+[`fastfetch`](https://github.com/fastfetch-cli/fastfetch) is a lot more popular, and I'm honestly guilty of not running this more often. It's mainly a system information tool. Running this recently reminded me to go run garbage collection on my Nix store:
 
-### Fastfetch
-
-This one's a lot more popular (cf. [`fastfetch-cli/fastfetch`](https://github.com/fastfetch-cli/fastfetch)). I'm honestly guilty of not running this more often. Running this recently reminded me to go run garbage collection on my Nix store. This also does expose some other parts of me (cough cough uptime): 
-
-```
-sreysus [λ] fastfetch --logo none
+<TerminalTranscript
+  label="System information reported by fastfetch"
+  transcript={`sreysus [λ] fastfetch --logo none
 sreysus@SSs-Air
 ---------------
 OS: macOS Tahoe 26.1 (25B78) arm64
@@ -63,30 +61,67 @@ Swap: 328.50 MiB / 2.00 GiB (16%)
 Disk (/): 327.43 GiB / 460.43 GiB (71%) - apfs [Read-only]
 Local IP (en0): 10.0.0.231/24
 Battery (bq40z651): 57% (3 hours, 39 mins remaining) [Discharging]
-Locale: en_US.UTF-8
-```
+Locale: en_US.UTF-8`}
+/>
 
 (I set `--logo none` because the Iosevka font on the code block squishes/warps the logo; otherwise, I would've loved to show off the Apple logo)
 
-### Change directory
+# Utilities
+
+## Change directory
 
 This one is also quite popular: [`ajeetdsouza/zoxide`](https://github.com/ajeetdsouza/zoxide).
 
-```
-~/workflow/sreyas.is/src/layouts
+<TerminalTranscript
+  label="Changing directories with zoxide"
+  transcript={`~/workflow/sreyas.is/src/layouts
 sreysus [λ] cd posts
 direnv: unloading
 
 ~/workflow/content/posts
-sreysus [λ]  
-```
+sreysus [λ]  `}
+/>
 
 It's honestly quite magical.
 
-### Yazi
+## Opening files
+
+Perhaps the last one convinced you that even the most basic things can be upgraded. But "opening files"?? Really?
+
+Yep. I've usually only used the regular `open` in Zshell when it'd be easier for my to type `open <name>.png` than copying the path and clicking into Finder to let the default app (Preview) open it. for example when I generated a PPM image in my [raytracing project](https://github.com/sreyassabbani/ray-tracing-rs), it saved me a ton of time.
+
+Ever since I switched to Nushell, I found its `open` command to be mostly a hindrance because it just didn't function at all like Zshell's `open` command. However, once I found what it was capable of, I immediately started using it.
+
+## Yazi
 
 Running [`yazi`](https://github.com/sxyazi/yazi):
 
-<EllipsisBreak />
+<a
+  href={yaziScreenshot.src}
+  data-plain-link
+  aria-label="Open the Yazi terminal capture at full size"
+>
+  <img
+    src={yaziScreenshot.src}
+    width={yaziScreenshot.width}
+    height={yaziScreenshot.height}
+    alt="Yazi browsing the sreyas.is project in Ghostty, with three directory panes and file-type colors"
+    loading="lazy"
+    decoding="async"
+  />
+</a>
 
-That's it for now. I might add more to this later on.
+# Fun
+
+## Typing test
+
+From [`lemnos/tt`](https://github.com/lemnos/tt):
+
+<TerminalTranscript
+  label="Starting a typing test"
+  transcript={`sreysus [λ] tt`}
+/>
+
+A nerdier version of [monkeytype](https://monkeytype.com)
+
+You can run in the format of `tt -n 10` for a 10-word test or `tt -t 20` for a 20-second test. Also, I have my system configured so that `tt` is [an alias to](https://github.com/sreyassabbani/config/blob/2ed6b6c2c52a2f66c59a903d43730c128688c070/home/tt.nix#L12) `tt -theme catppuccin-frappe`, which itself is derived from a [custom theme file written](https://github.com/sreyassabbani/config/blob/2ed6b6c2c52a2f66c59a903d43730c128688c070/home/tt.nix#L3-L10) @ `~/.tt/themes/catppuccin-frappe`.
