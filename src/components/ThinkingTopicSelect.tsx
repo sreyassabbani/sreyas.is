@@ -1,15 +1,22 @@
 "use client";
 
+import { ChevronDownIcon } from "lucide-react";
 import * as React from "react";
-
+import { Button } from "@/components/ui/button";
 import {
-    Select,
-    SelectContent,
-    SelectGroup,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandShortcut,
+} from "@/components/ui/command";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 
 type Topic = Readonly<{
     href: string;
@@ -26,61 +33,69 @@ export function ThinkingTopicSelect({ pathname, topics }: Props) {
     const currentTopic = topics.find(
         (topic) => pathname === topic.href || pathname.startsWith(topic.href),
     );
-    const [value, setValue] = React.useState<string | null>(
-        currentTopic?.href ?? null,
-    );
-
-    React.useEffect(() => {
-        setValue(currentTopic?.href ?? null);
-    }, [currentTopic]);
+    const [open, setOpen] = React.useState(false);
 
     return (
-        <Select
-            items={topics.map((topic) => ({
-                label: topic.label,
-                value: topic.href,
-            }))}
-            value={value}
-            onValueChange={(nextHref) => {
-                setValue(nextHref);
-
-                if (nextHref && nextHref !== pathname) {
-                    window.location.assign(nextHref);
+        <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger
+                render={
+                    <Button
+                        variant="ghost"
+                        aria-label="Choose a subject"
+                        className="h-auto w-auto max-w-44 cursor-pointer bg-transparent p-0 font-brand shadow-none hover:bg-transparent focus-visible:ring-0 sm:max-w-56"
+                    />
                 }
-            }}
-        >
-            <SelectTrigger
-                aria-label="Choose a subject"
-                className="h-auto w-auto max-w-44 cursor-pointer border-0 bg-transparent p-0 font-brand shadow-none hover:bg-transparent focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent sm:max-w-56"
             >
                 <span className="flex min-w-0 items-center rounded border border-muted-foreground/50 px-1.5 py-0.5 text-base font-normal text-muted-foreground transition-colors hover:border-primary hover:text-primary md:text-lg">
                     <span className="truncate">
                         {currentTopic ? currentTopic.label.toLowerCase() : "…"}
                     </span>
                 </span>
-                <SelectValue className="sr-only" />
-            </SelectTrigger>
+                <ChevronDownIcon />
+            </PopoverTrigger>
 
-            <SelectContent
+            <PopoverContent
                 align="end"
-                alignItemWithTrigger={false}
-                className="w-40 min-w-40"
+                sideOffset={6}
+                className="w-[min(20rem,calc(100vw-2rem))] gap-0 p-0"
             >
-                <SelectGroup>
-                    {topics.map((topic) => (
-                        <SelectItem key={topic.href} value={topic.href}>
-                            <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
-                                <span className="truncate">
-                                    {topic.label.toLowerCase()}
-                                </span>
-                                <span className="font-mono text-[0.68rem] text-muted-foreground">
-                                    {topic.count}
-                                </span>
-                            </span>
-                        </SelectItem>
-                    ))}
-                </SelectGroup>
-            </SelectContent>
-        </Select>
+                <Command>
+                    <CommandInput
+                        aria-label="Filter subjects"
+                        placeholder="Find a subject…"
+                    />
+                    <CommandList className="max-h-[min(20rem,var(--available-height))]">
+                        <CommandEmpty>No subjects found.</CommandEmpty>
+                        <CommandGroup>
+                            {topics.map((topic) => (
+                                <CommandItem
+                                    key={topic.href}
+                                    value={topic.href}
+                                    keywords={[topic.label]}
+                                    data-current={
+                                        topic.href === currentTopic?.href
+                                    }
+                                    className="min-w-0 data-[current=true]:text-primary"
+                                    onSelect={(nextHref) => {
+                                        setOpen(false);
+
+                                        if (nextHref !== pathname) {
+                                            window.location.assign(nextHref);
+                                        }
+                                    }}
+                                >
+                                    <span className="min-w-0 flex-1 truncate">
+                                        {topic.label.toLowerCase()}
+                                    </span>
+                                    <CommandShortcut className="w-[3ch] shrink-0 text-right font-brand text-[0.68rem] leading-none tracking-normal tabular-nums">
+                                        {topic.count}
+                                    </CommandShortcut>
+                                </CommandItem>
+                            ))}
+                        </CommandGroup>
+                    </CommandList>
+                </Command>
+            </PopoverContent>
+        </Popover>
     );
 }
