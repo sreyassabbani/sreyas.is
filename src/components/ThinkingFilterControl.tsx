@@ -31,13 +31,13 @@ type FilterOption = Readonly<{
 const options: readonly FilterOption[] = [
     {
         href: "/thinking/on/",
-        label: "Date",
+        label: "By date",
         icon: CalendarDaysIcon,
         activePath: "/thinking/on",
     },
     {
         href: "/thinking/about/",
-        label: "Topic",
+        label: "By subject",
         icon: TagsIcon,
         activePath: "/thinking/about",
     },
@@ -97,9 +97,9 @@ export function ThinkingFilterControl({ pathname }: Props) {
                         "absolute left-0 top-0 h-8 overflow-hidden p-0 transition-[width,background-color,border-color,color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
                         isActive && expanded ? "w-16" : "w-8",
                         isActive &&
-                            "border-primary bg-primary text-primary-foreground",
+                            "border-primary bg-primary text-[oklch(0.25_0.045_259.64)]",
                         resetHot &&
-                            "border-destructive/40 bg-destructive/10 text-destructive",
+                            "border-primary/45 bg-background/25 text-foreground backdrop-blur-[1px]",
                     )}
                 />
 
@@ -107,7 +107,7 @@ export function ThinkingFilterControl({ pathname }: Props) {
                     aria-label="Filter thinking"
                     className={cn(
                         "absolute left-0 top-0 flex size-8 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-current outline-none transition-colors duration-200 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                        isActive && "hover:bg-primary/90",
+                        isActive && "hover:bg-primary/80",
                         resetHot && "hover:bg-transparent",
                     )}
                 >
@@ -124,7 +124,7 @@ export function ThinkingFilterControl({ pathname }: Props) {
                         onFocus={() => setResetHot(true)}
                         onBlur={() => setResetHot(false)}
                         className={cn(
-                            "absolute right-0 top-0 flex size-8 items-center justify-center rounded-full text-current outline-none transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:ring-2 focus-visible:ring-destructive/40",
+                            "absolute right-0 top-0 flex size-8 items-center justify-center rounded-full text-current outline-none transition-[opacity,transform] duration-150 ease-[cubic-bezier(0.22,1,0.36,1)] focus-visible:ring-2 focus-visible:ring-ring/50",
                             expanded
                                 ? "pointer-events-auto translate-x-0 opacity-100"
                                 : "pointer-events-none -translate-x-0.5 opacity-0",
@@ -145,8 +145,11 @@ export function ThinkingFilterControl({ pathname }: Props) {
             <PopoverContent
                 align="end"
                 sideOffset={8}
-                className="w-36 gap-1 p-1"
+                className="w-40 gap-1 p-1"
             >
+                <p className="px-2 pb-1 pt-1 font-mono text-[0.68rem] uppercase tracking-[0.12em] text-muted-foreground">
+                    Browse thinking
+                </p>
                 {options.map((option: FilterOption) => {
                     const Icon: LucideIcon = option.icon;
                     const optionActive: boolean = pathname.startsWith(

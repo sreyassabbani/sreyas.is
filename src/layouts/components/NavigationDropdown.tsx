@@ -59,16 +59,16 @@ export function NavigationDropdown({
                 }
             }}
         >
-            <div className="flex items-center font-brand text-[clamp(1.8rem,8vw,2.35rem)] font-semibold tracking-tight leading-none">
+            <div className="flex items-center font-brand text-[clamp(1.45rem,6vw,2.35rem)] font-semibold tracking-tight leading-none md:text-[clamp(1.8rem,8vw,2.35rem)]">
                 <a href="/" className="no-underline hover:text-foreground">
                     <span className="select-none">sreyas</span>
                     <span className="text-primary select-none">.is</span>
                 </a>
                 <SelectTrigger
                     aria-label="Choose page"
-                    className="ml-4 h-auto w-auto cursor-pointer border-0 bg-transparent p-0 shadow-none hover:bg-transparent focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent"
+                    className="ml-2 h-auto w-auto cursor-pointer border-0 bg-transparent p-0 shadow-none hover:bg-transparent focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent md:ml-4"
                 >
-                    <span className="flex items-center rounded border border-muted-foreground/50 px-1.5 py-0.5 text-lg font-normal text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                    <span className="flex items-center rounded border border-muted-foreground/50 px-1.5 py-0.5 text-base font-normal text-muted-foreground transition-colors hover:border-primary hover:text-primary md:text-lg">
                         {currentItem && currentItem.href !== "/"
                             ? currentItem.label.toLowerCase()
                             : "..."}
