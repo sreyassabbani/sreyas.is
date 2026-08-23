@@ -13,6 +13,7 @@ import type { NavigationItem, NavigationItemGroup } from "@/lib/navigation";
 const pathname = Astro.url.pathname;
 const isHome = pathname === "/";
 const isThinking = pathname.startsWith("/thinking");
+const isThinkingAboutIndex = pathname === "/thinking/about/";
 const contentPageItems: NavigationItem[] = (await getCollection("pages"))
     .map((page) => ({
         href: `/${page.id}`,
@@ -37,15 +38,16 @@ const topics = isThinking
 
 const controlsClass =
     "absolute bottom-0 left-full z-10 flex shrink-0 -translate-x-1/2 translate-y-1/2 items-center gap-2";
+const primaryNavigationClass = isThinkingAboutIndex
+    ? "flex min-w-0 items-center justify-start gap-2 md:w-full md:translate-x-[2.75rem] md:justify-center md:gap-3"
+    : "flex min-w-0 items-center justify-start gap-2 md:w-full md:gap-3";
 const socialLinksClass = "flex items-center gap-1 md:gap-4 md:px-3";
 ---
 
 <nav
     class="relative flex w-[calc(100%-5.5rem)] flex-col gap-3 border-b border-border py-3 text-sm text-foreground md:h-14 md:flex-row md:items-center md:justify-between md:gap-0 md:px-2 md:py-0"
 >
-    <div
-        class="flex min-w-0 items-center justify-start gap-2 md:w-full md:gap-3"
-    >
+    <div class={primaryNavigationClass}>
         <NavigationDropdown
             pathname={pathname}
             groups={navigationGroups}
@@ -56,10 +58,11 @@ const socialLinksClass = "flex items-center gap-1 md:gap-4 md:px-3";
             topics={topics}
             client:only="react"
         />
-        <div class={controlsClass}>
-            <ThemeToggle />
-            <ThinkingFilterControl pathname={pathname} client:only="react" />
-        </div>
+    </div>
+
+    <div class={controlsClass}>
+        <ThemeToggle />
+        <ThinkingFilterControl pathname={pathname} client:only="react" />
     </div>
 
     <div

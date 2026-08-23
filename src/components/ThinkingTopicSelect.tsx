@@ -7,7 +7,6 @@ import {
     SelectContent,
     SelectGroup,
     SelectItem,
-    SelectLabel,
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
@@ -57,25 +56,27 @@ export function ThinkingTopicSelect({ pathname, topics }: Props) {
         >
             <SelectTrigger
                 aria-label="Choose what to think about"
-                className="h-auto max-w-44 cursor-pointer rounded border-muted-foreground/35 bg-transparent px-1.5 py-0.5 font-brand text-sm text-muted-foreground shadow-none hover:border-primary hover:bg-transparent hover:text-primary focus-visible:ring-2 focus-visible:ring-ring dark:bg-transparent dark:hover:bg-transparent sm:max-w-56"
+                className="h-auto w-auto max-w-44 cursor-pointer border-0 bg-transparent p-0 font-brand shadow-none hover:bg-transparent focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent sm:max-w-56"
             >
-                <span className="truncate">
-                    {currentTopic ? currentTopic.label.toLowerCase() : "about…"}
+                <span className="flex min-w-0 items-center rounded border border-muted-foreground/50 px-1.5 py-0.5 text-base font-normal text-muted-foreground transition-colors hover:border-primary hover:text-primary md:text-lg">
+                    <span className="truncate">
+                        {currentTopic
+                            ? currentTopic.label.toLowerCase()
+                            : "about…"}
+                    </span>
                 </span>
                 <SelectValue className="sr-only" />
             </SelectTrigger>
 
             <SelectContent
-                align="start"
-                alignOffset={-4}
+                align="end"
                 alignItemWithTrigger={false}
-                className="min-w-56"
+                className="w-40 min-w-40"
             >
                 <SelectGroup>
-                    <SelectLabel>Thinking about…</SelectLabel>
                     {topics.map((topic) => (
                         <SelectItem key={topic.href} value={topic.href}>
-                            <span className="flex min-w-0 flex-1 items-center justify-between gap-6">
+                            <span className="flex min-w-0 flex-1 items-center justify-between gap-4">
                                 <span className="truncate">
                                     {topic.label.toLowerCase()}
                                 </span>
