@@ -1,0 +1,54 @@
+---
+title: "use square brackets for fallible functions"
+description: "Verselang"
+publish: true
+pubDate: "Jul 25 2026"
+type: "short"
+---
+
+import EllipsisBreak from "@/components/EllipsisBreak.astro";
+
+[This video](https://www.youtube.com/watch?v=ebqKYLKjL6U) by Logan Smith is soo good. He claims the end may be anti-climactic, but I strongly disagree. If you actually pay attention[^1] throughout the entire video, I'd say this is actually so clever: both the fact that Logan was able to figure this out, and also that the creators of Verse added this detail.
+
+<EllipsisBreak />
+
+> Disclosure: I have never used Verselang before; all of my opinions have been formed by Logan's video, the [Book of Verse](https://verselang.github.io/book/00_overview/), and ChatGPT, although this article was not written with the use of AI. I am writing this simply to show an interest in Verselang and other languages alike, those that care about the minor details, rethink principles, etc.
+
+I'll assume you've either watched the video at this point, or are not planning to. Either way, I'll re-state the climax:
+
+Array indexing is:
+
+- a fallible operation
+- a partial function
+
+The "oh sh**" moment happens when you realize that both of these bullet points are structurally identical (kinda like an isomorphism) if your language doesn't crash programs on failure, but instead treats it like a side effect that must be handled.
+
+The essence is this:
+- there are some inputs which cause failure for fallible operations
+- there are some inputs for which the output is undefined for partial functions
+
+To draw the relation between array indexing and functions closer, consider an intermediate object: maps. Actually, with Verse notation, the notation for arrays and maps is very semantically suggestive: maps from `foo` -> `bar` are `[foo]bar`, while arrays are denoted `[]baz`, which implicitly suggests a map like `[int]baz`, from `int` -> `baz`.
+
+Just as a function from `int` -> `baz` can be undefined on some inputs, array indexing can fail for some inputs.
+
+WHICH IS WHY, IN VERSE, WE USE SQUARE BRACKETS FOR FALLIBLE FUNCTIONS!!
+
+---
+
+Failure becomes part of the control flow.
+
+```
+Divide[1, 0]   # can fail
+Divide[2, 3]   # can fail
+
+Add(1, 0)      # infallible
+
+myArr[0]       # can fail
+myMap["bob"]   # can fail
+```
+
+---
+
+There are apparently **sooo** many cooler features to Verse than what Logan mentioned in the video: transactional rollback via speculative execution, structured concurrency, etc. It's quite a pity to see that Verse isn't available for the public as a general scripting language.
+
+[^1]: Which I guess could be hard nowadays
