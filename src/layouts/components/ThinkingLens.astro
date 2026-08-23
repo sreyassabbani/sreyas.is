@@ -1,0 +1,35 @@
+---
+import { getCollection } from "astro:content";
+import { createNavigationGroups, type NavigationItem } from "@/lib/navigation";
+import { NavigationDropdown } from "./NavigationDropdown";
+
+type Props = {
+    pathname: string;
+    relation: "about" | "on";
+};
+
+const { pathname, relation } = Astro.props;
+const contentPageItems: NavigationItem[] = (await getCollection("pages"))
+    .map((page) => ({
+        href: `/${page.id}`,
+        label: page.data.title,
+    }))
+    .sort((left, right) => left.label.localeCompare(right.label));
+const navigationGroups = createNavigationGroups(contentPageItems);
+---
+
+<div
+    class="flex w-full flex-wrap items-center justify-center gap-x-2 gap-y-3 md:gap-x-3"
+>
+    <NavigationDropdown
+        pathname={pathname}
+        groups={navigationGroups}
+        client:only="react"
+    />
+    <span
+        class="font-brand text-base font-normal leading-none text-muted-foreground md:text-lg"
+    >
+        {relation}
+    </span>
+    <slot />
+</div>

@@ -97,7 +97,7 @@ export function ThinkingFilterControl({ pathname }: Props) {
                         "absolute left-0 top-0 h-8 overflow-hidden p-0 transition-[width,background-color,border-color,color] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)]",
                         isActive && expanded ? "w-16" : "w-8",
                         isActive &&
-                            "border-primary bg-primary text-[oklch(0.25_0.045_259.64)]",
+                            "border-primary/50 bg-primary/15 text-foreground",
                         resetHot &&
                             "border-primary/45 bg-background/25 text-foreground backdrop-blur-[1px]",
                     )}
@@ -107,7 +107,7 @@ export function ThinkingFilterControl({ pathname }: Props) {
                     aria-label="Filter thinking"
                     className={cn(
                         "absolute left-0 top-0 flex size-8 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 text-current outline-none transition-colors duration-200 hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                        isActive && "hover:bg-primary/80",
+                        isActive && "hover:bg-primary/10",
                         resetHot && "hover:bg-transparent",
                     )}
                 >

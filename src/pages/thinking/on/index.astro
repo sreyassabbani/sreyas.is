@@ -2,34 +2,25 @@
 import { getCollection } from "astro:content";
 import { formatThinkingDate, groupEntriesByDate } from "@/lib/thinking";
 import { SITE_TITLE } from "@/consts";
+import { ThinkingDateRangePicker } from "@/components/ThinkingDateRangePicker";
 import Layout from "@/layouts/Layout.astro";
+import ThinkingLens from "@/layouts/components/ThinkingLens.astro";
 
 const dateGroups = groupEntriesByDate(await getCollection("posts"));
+const dates = dateGroups.map((group) => ({
+    dateSlug: group.dateSlug,
+    label: formatThinkingDate(group.date),
+    count: group.entries.length,
+}));
 ---
 
 <Layout
     title={`${SITE_TITLE} — Thinking by date`}
     description="Thinking grouped by date."
+    variant="lens"
+    showNavigation={false}
 >
-    <section class="mt-8 space-y-8">
-        <h1 class="sr-only">Thinking by date</h1>
-        <div class="space-y-0">
-            {
-                dateGroups.map((group) => (
-                    <a
-                        href={`/thinking/on/${group.dateSlug}/`}
-                        class="grid gap-1 border-b border-border py-4 text-muted-foreground no-underline transition-colors duration-200 last:border-0 hover:text-primary sm:grid-cols-[9rem_1fr]"
-                    >
-                        <span class="font-mono text-xs">{group.dateSlug}</span>
-                        <span class="text-foreground">
-                            {formatThinkingDate(group.date)}
-                            <span class="ml-2 font-mono text-xs text-muted-foreground">
-                                {group.entries.length}
-                            </span>
-                        </span>
-                    </a>
-                ))
-            }
-        </div>
-    </section>
+    <ThinkingLens pathname={Astro.url.pathname} relation="on">
+        <ThinkingDateRangePicker dates={dates} client:only="react" />
+    </ThinkingLens>
 </Layout>

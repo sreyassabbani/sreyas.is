@@ -6,7 +6,7 @@ import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
 export type Props = {
     title: string;
     description: string;
-    variant?: "default" | "home" | "bare";
+    variant?: "default" | "home" | "bare" | "lens";
     showNavigation?: boolean;
 };
 
@@ -32,6 +32,13 @@ const layouts = {
         main: "w-full flex min-h-0 flex-1 flex-col pt-4 sm:pt-6 md:mt-4 md:flex-none md:items-center md:justify-center md:gap-6 md:pt-0",
     },
 
+    lens: {
+        body: "bg-background text-foreground h-dvh overflow-hidden",
+        outer: "mx-auto flex h-dvh w-full justify-center",
+        shell: "page-shell flex h-dvh w-full max-w-4xl flex-col px-4 py-6 sm:px-6 sm:py-8 md:px-12 md:py-10",
+        main: "flex min-h-0 w-full flex-1 items-center justify-center",
+    },
+
     default: {
         body: "bg-background text-foreground overflow-x-hidden min-h-screen",
         outer: "mx-auto flex w-full justify-center min-h-screen",
@@ -40,9 +47,7 @@ const layouts = {
     },
 };
 
-const layout = !showNavigation
-    ? layouts.bare
-    : (layouts[variant] ?? layouts.default);
+const layout = layouts[variant] ?? layouts.default;
 ---
 
 <html lang="en">

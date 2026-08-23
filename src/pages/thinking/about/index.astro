@@ -1,9 +1,30 @@
 ---
+import { getCollection } from "astro:content";
 import { SITE_TITLE } from "@/consts";
+import { ThinkingTopicSelect } from "@/components/ThinkingTopicSelect";
+import { formatTag, getTagHref, getThinkingTopics } from "@/lib/thinking";
 import Layout from "@/layouts/Layout.astro";
+import ThinkingLens from "@/layouts/components/ThinkingLens.astro";
+
+const pathname = Astro.url.pathname;
+const topics = getThinkingTopics(await getCollection("posts")).map((topic) => ({
+    href: getTagHref(topic.tag),
+    label: formatTag(topic.tag),
+    count: topic.entries.length,
+}));
 ---
 
 <Layout
     title={`${SITE_TITLE} — Thinking by topic`}
     description="Thinking grouped by topic."
-/>
+    variant="lens"
+    showNavigation={false}
+>
+    <ThinkingLens pathname={pathname} relation="about">
+        <ThinkingTopicSelect
+            pathname={pathname}
+            topics={topics}
+            client:only="react"
+        />
+    </ThinkingLens>
+</Layout>
