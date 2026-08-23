@@ -6,13 +6,21 @@ unset NO_COLOR
 
 status_file="$1"
 shift
+status_tmp="${status_file}.tmp.$$"
+
+printf 'running\n' > "$status_tmp"
+mv -f "$status_tmp" "$status_file"
 
 # Remove login-shell residue before the capture command paints its UI.
 printf '\033[2J\033[H'
+# Let Ghostty finish applying its initial cell geometry before short-lived
+# commands paint the first row.
+sleep 0.2
 
 "$@"
 command_status=$?
-printf '%s\n' "$command_status" > "$status_file"
+printf 'exit:%s\n' "$command_status" > "$status_tmp"
+mv -f "$status_tmp" "$status_file"
 
 # Keep the surface alive without Ghostty's "process exited" overlay. The
 # capture controller terminates this dedicated app instance after the shot.

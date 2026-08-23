@@ -1,6 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { rmSync } from "node:fs";
-import { access, mkdir, readFile, rename, rm, stat } from "node:fs/promises";
+import {
+    access,
+    link,
+    mkdir,
+    readFile,
+    rename,
+    rm,
+    stat,
+} from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
@@ -10,9 +18,13 @@ import sharp from "sharp";
 const root = path.resolve(import.meta.dir, "..");
 const ghosttyApp = "/Applications/Ghostty.app";
 const ghosttyBinary = path.join(ghosttyApp, "Contents/MacOS/ghostty");
-const captureConfig = path.join(
+const standardCaptureConfig = path.join(
     import.meta.dir,
     "terminal-capture/ghostty.conf",
+);
+const wideCaptureConfig = path.join(
+    import.meta.dir,
+    "terminal-capture/ghostty-wide.conf",
 );
 const windowIdHelper = path.join(
     import.meta.dir,
@@ -28,16 +40,30 @@ const defaultOutputDirectory = path.join(
 );
 const captureFont = "GeistMono Nerd Font Mono";
 const supportedGhosttyVersion = "Ghostty 1.3.1";
-const expectedCaptureSize = { width: 2016, height: 1368 };
+const captureProfiles = {
+    standard: {
+        config: standardCaptureConfig,
+        size: { width: 2016, height: 1368 },
+    },
+    wide: {
+        config: wideCaptureConfig,
+        size: { width: 2738, height: 1032 },
+    },
+} as const;
+type CaptureProfileName = keyof typeof captureProfiles;
 const forwardedEnvironmentNames = [
     "HOME",
     "LANG",
     "LC_ALL",
     "LC_CTYPE",
+    "LOGNAME",
     "LSCOLORS",
     "LS_COLORS",
     "PATH",
+    "SHELL",
     "TERMINFO_DIRS",
+    "TMPDIR",
+    "USER",
     "XDG_CACHE_HOME",
     "XDG_CONFIG_DIRS",
     "XDG_CONFIG_HOME",
@@ -49,12 +75,16 @@ const forwardedEnvironmentNames = [
 
 type CaptureOptions = {
     command: string[];
+    cropHeight: number | null;
+    cropTop: number;
+    cropWidth: number | null;
     cwd: string;
     delay: number | null;
     force: boolean;
     keepOpen: boolean;
     name: string;
     output: string;
+    profile: CaptureProfileName;
 };
 
 function printUsage() {
@@ -65,6 +95,10 @@ Options:
   --cwd <path>       Initial terminal directory (default: current directory)
   --output <path>    PNG destination (default: terminal-delights media folder)
   --delay <seconds>  Capture automatically after a delay instead of waiting
+  --crop-height <px> Crop the validated full-size capture from the top
+  --crop-top <px>    Top offset for --crop-height (default: 0)
+  --crop-width <px>  Crop empty space from the right after validation
+  --profile <name>   Capture geometry: standard or wide (default: standard)
   --force            Replace an existing output file
   --keep-open        Leave the temporary Ghostty instance open after capture
   --help             Show this help
@@ -119,15 +153,40 @@ export function parseCaptureArgs(args: string[]): CaptureOptions | null {
     }
 
     let cwd = process.cwd();
+    let cropHeight: number | null = null;
+    let cropTop = 0;
+    let cropWidth: number | null = null;
     let delay: number | null = null;
     let force = false;
     let keepOpen = false;
     let output = path.join(defaultOutputDirectory, `${name}.png`);
+    let profile: CaptureProfileName = "standard";
 
     for (let index = 1; index < optionArgs.length; index += 1) {
         const arg = optionArgs[index];
 
         switch (arg) {
+            case "--crop-height":
+                cropHeight = parsePositiveNumber(
+                    takeValue(optionArgs, index, arg),
+                    arg,
+                );
+                index += 1;
+                break;
+            case "--crop-top":
+                cropTop = parsePositiveNumber(
+                    takeValue(optionArgs, index, arg),
+                    arg,
+                );
+                index += 1;
+                break;
+            case "--crop-width":
+                cropWidth = parsePositiveNumber(
+                    takeValue(optionArgs, index, arg),
+                    arg,
+                );
+                index += 1;
+                break;
             case "--cwd":
                 cwd = takeValue(optionArgs, index, arg);
                 index += 1;
@@ -136,6 +195,17 @@ export function parseCaptureArgs(args: string[]): CaptureOptions | null {
                 output = takeValue(optionArgs, index, arg);
                 index += 1;
                 break;
+            case "--profile": {
+                const value = takeValue(optionArgs, index, arg);
+                if (!(value in captureProfiles)) {
+                    throw new Error(
+                        `--profile must be one of: ${Object.keys(captureProfiles).join(", ")}`,
+                    );
+                }
+                profile = value as CaptureProfileName;
+                index += 1;
+                break;
+            }
             case "--delay":
                 delay = parsePositiveNumber(
                     takeValue(optionArgs, index, arg),
@@ -154,14 +224,54 @@ export function parseCaptureArgs(args: string[]): CaptureOptions | null {
         }
     }
 
+    if (
+        cropHeight !== null &&
+        (!Number.isInteger(cropHeight) || cropHeight < 160)
+    ) {
+        throw new Error(
+            "--crop-height must be an integer of at least 160 pixels",
+        );
+    }
+    if (!Number.isInteger(cropTop)) {
+        throw new Error("--crop-top must be a non-negative integer");
+    }
+    if (cropTop > 0 && cropHeight === null) {
+        throw new Error("--crop-top requires --crop-height");
+    }
+    if (
+        cropWidth !== null &&
+        (!Number.isInteger(cropWidth) || cropWidth < 320)
+    ) {
+        throw new Error(
+            "--crop-width must be an integer of at least 320 pixels",
+        );
+    }
+    if (cropWidth !== null && cropWidth > captureProfiles[profile].size.width) {
+        throw new Error(
+            `--crop-width cannot exceed ${captureProfiles[profile].size.width} pixels for the ${profile} profile`,
+        );
+    }
+    if (
+        cropHeight !== null &&
+        cropTop + cropHeight > captureProfiles[profile].size.height
+    ) {
+        throw new Error(
+            `the crop cannot exceed ${captureProfiles[profile].size.height} pixels for the ${profile} profile`,
+        );
+    }
+
     return {
         command,
+        cropHeight,
+        cropTop,
+        cropWidth,
         cwd: path.resolve(expandHome(cwd)),
         delay,
         force,
         keepOpen,
         name,
         output: path.resolve(expandHome(output)),
+        profile,
     };
 }
 
@@ -209,16 +319,16 @@ async function waitForCaptureProcess(captureId: string, timeoutMs = 12_000) {
     throw new Error("timed out waiting for the capture Ghostty process");
 }
 
-export function captureEnvironmentArgs(
+export function captureProcessEnvironment(
     environment: Record<string, string | undefined>,
 ) {
-    const values = forwardedEnvironmentNames.flatMap((name) => {
+    const values: Record<string, string> = {};
+    for (const name of forwardedEnvironmentNames) {
         const value = environment[name];
-        return value ? [`--env=${name}=${value}`] : [];
-    });
+        if (value) values[name] = value;
+    }
 
-    if (!environment.COLORTERM) values.push("--env=COLORTERM=truecolor");
-    else values.push(`--env=COLORTERM=${environment.COLORTERM}`);
+    values.COLORTERM = environment.COLORTERM || "truecolor";
 
     return values;
 }
@@ -243,6 +353,24 @@ async function waitForWindowId(
     }
 
     throw new Error("timed out waiting for the capture Ghostty window");
+}
+
+function assertWindowIdentity(pid: number, windowId: number) {
+    const result = Bun.spawnSync(
+        [
+            "/usr/bin/swift",
+            windowIdHelper,
+            "--verify",
+            String(pid),
+            String(windowId),
+        ],
+        { stdout: "pipe", stderr: "pipe" },
+    );
+    if (result.exitCode !== 0) {
+        throw new Error(
+            "the dedicated Ghostty window closed or changed identity before capture",
+        );
+    }
 }
 
 function assertScreenCapturePermission() {
@@ -302,19 +430,24 @@ async function fileExists(filePath: string) {
 async function assertCommandDidNotFail(statusFile: string) {
     if (!(await fileExists(statusFile))) return;
 
-    const exitCode = Number((await readFile(statusFile, "utf8")).trim());
-    if (!Number.isInteger(exitCode)) {
+    const status = (await readFile(statusFile, "utf8")).trim();
+    if (status === "running") return;
+
+    const match = status.match(/^exit:(\d+)$/);
+    if (!match) {
         throw new Error("capture command wrote an invalid exit status");
     }
+    const exitCode = Number(match[1]);
     if (exitCode !== 0) {
         throw new Error(`capture command exited with status ${exitCode}`);
     }
 }
 
 async function captureTerminal(options: CaptureOptions) {
+    const captureProfile = captureProfiles[options.profile];
     for (const requiredPath of [
         ghosttyBinary,
-        captureConfig,
+        captureProfile.config,
         windowIdHelper,
         commandRunner,
     ]) {
@@ -334,7 +467,11 @@ async function captureTerminal(options: CaptureOptions) {
     }
 
     assertScreenCapturePermission();
-    run([ghosttyBinary, "+validate-config", `--config-file=${captureConfig}`]);
+    run([
+        ghosttyBinary,
+        "+validate-config",
+        `--config-file=${captureProfile.config}`,
+    ]);
     const ghosttyVersion = run([ghosttyBinary, "--version"]).split("\n")[0];
     if (ghosttyVersion !== supportedGhosttyVersion) {
         throw new Error(
@@ -369,17 +506,16 @@ async function captureTerminal(options: CaptureOptions) {
         ghosttyApp,
         "--args",
         "--config-default-files=false",
-        `--config-file=${captureConfig}`,
+        `--config-file=${captureProfile.config}`,
         `--title=${windowTitle}`,
         `--working-directory=${options.cwd}`,
         `--env=TERMINAL_CAPTURE_ID=${captureId}`,
-        ...captureEnvironmentArgs(process.env),
         `--command=${commandValue}`,
     ];
 
     const openProcess = Bun.spawn(openArgs, {
         cwd: options.cwd,
-        env: Bun.env,
+        env: captureProcessEnvironment(process.env),
         stdout: "pipe",
         stderr: "pipe",
     });
@@ -397,13 +533,14 @@ async function captureTerminal(options: CaptureOptions) {
     const closeCaptureInstance = () => {
         if (!shouldClose) return;
         shouldClose = false;
-        const capturePids = pid
-            ? [pid]
-            : [...ghosttyProcesses()]
-                  .filter(([, command]) =>
-                      command.includes(`TERMINAL_CAPTURE_ID=${captureId}`),
-                  )
-                  .map(([capturePid]) => capturePid);
+        const marker = `TERMINAL_CAPTURE_ID=${captureId}`;
+        const currentProcesses = ghosttyProcesses();
+        const capturePids =
+            pid && currentProcesses.get(pid)?.includes(marker)
+                ? [pid]
+                : [...ghosttyProcesses()]
+                      .filter(([, command]) => command.includes(marker))
+                      .map(([capturePid]) => capturePid);
         for (const capturePid of capturePids) {
             try {
                 process.kill(capturePid, "SIGTERM");
@@ -428,9 +565,20 @@ async function captureTerminal(options: CaptureOptions) {
     let normalizedOutput: string | undefined;
     try {
         pid = await waitForCaptureProcess(captureId);
-        const windowId = await waitForWindowId(pid, windowTitle);
+        let windowId = await waitForWindowId(pid, windowTitle);
         console.log(`[terminal-capture] ready: pid ${pid}, window ${windowId}`);
         await waitForCapture(options);
+
+        // Re-resolve immediately before capture. During an unbounded manual
+        // staging wait, a closed process or recycled window ID must never be
+        // mistaken for the dedicated capture surface.
+        const livePid = await waitForCaptureProcess(captureId, 2_000);
+        if (livePid === pid) {
+            assertWindowIdentity(pid, windowId);
+        } else {
+            pid = livePid;
+            windowId = await waitForWindowId(pid, windowTitle, 2_000);
+        }
         await assertCommandDidNotFail(commandStatusFile);
         await mkdir(path.dirname(options.output), { recursive: true });
         rawOutput = path.join(
@@ -452,13 +600,33 @@ async function captureTerminal(options: CaptureOptions) {
             `-l${windowId}`,
             rawOutput,
         ]);
+        await assertCommandDidNotFail(commandStatusFile);
 
         if (!(await fileExists(rawOutput))) {
             throw new Error(
                 "macOS did not produce a screenshot; verify Screen Recording permission and that the capture window stayed open",
             );
         }
-        await sharp(rawOutput)
+        const rawMetadata = await sharp(rawOutput).metadata();
+        if (
+            rawMetadata.width !== captureProfile.size.width ||
+            rawMetadata.height !== captureProfile.size.height
+        ) {
+            throw new Error(
+                `capture was ${rawMetadata.width}×${rawMetadata.height}; expected ${captureProfile.size.width}×${captureProfile.size.height} for the ${options.profile} profile. Keep the Ghostty window on the Retina display or intentionally update the capture baseline`,
+            );
+        }
+
+        let normalizedImage = sharp(rawOutput).toColorspace("srgb");
+        if (options.cropHeight !== null || options.cropWidth !== null) {
+            normalizedImage = normalizedImage.extract({
+                height: options.cropHeight ?? captureProfile.size.height,
+                left: 0,
+                top: options.cropTop,
+                width: options.cropWidth ?? captureProfile.size.width,
+            });
+        }
+        await normalizedImage
             .toColorspace("srgb")
             .withIccProfile("srgb")
             .png({ compressionLevel: 9 })
@@ -469,12 +637,16 @@ async function captureTerminal(options: CaptureOptions) {
         if (!metadata.width || !metadata.height) {
             throw new Error("the captured PNG has invalid dimensions");
         }
+        const expectedOutputHeight =
+            options.cropHeight ?? captureProfile.size.height;
+        const expectedOutputWidth =
+            options.cropWidth ?? captureProfile.size.width;
         if (
-            metadata.width !== expectedCaptureSize.width ||
-            metadata.height !== expectedCaptureSize.height
+            metadata.width !== expectedOutputWidth ||
+            metadata.height !== expectedOutputHeight
         ) {
             throw new Error(
-                `capture was ${metadata.width}×${metadata.height}; expected ${expectedCaptureSize.width}×${expectedCaptureSize.height}. Keep the Ghostty window on the Retina display or intentionally update the capture baseline`,
+                `normalized output was ${metadata.width}×${metadata.height}; expected ${expectedOutputWidth}×${expectedOutputHeight}`,
             );
         }
         const stats = await image.stats();
@@ -486,7 +658,12 @@ async function captureTerminal(options: CaptureOptions) {
             );
         }
 
-        await rename(normalizedOutput, options.output);
+        if (options.force) {
+            await rename(normalizedOutput, options.output);
+        } else {
+            await link(normalizedOutput, options.output);
+            await rm(normalizedOutput);
+        }
         normalizedOutput = undefined;
 
         console.log(

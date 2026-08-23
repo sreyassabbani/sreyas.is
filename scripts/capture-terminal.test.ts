@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
 import path from "node:path";
-import { captureEnvironmentArgs, parseCaptureArgs } from "./capture-terminal";
+import {
+    captureProcessEnvironment,
+    parseCaptureArgs,
+} from "./capture-terminal";
 
 describe("parseCaptureArgs", () => {
     test("parses an interactive command", () => {
@@ -8,6 +11,9 @@ describe("parseCaptureArgs", () => {
             parseCaptureArgs(["yazi", "--cwd", "src/assets", "--", "yazi"]),
         ).toMatchObject({
             command: ["yazi"],
+            cropHeight: null,
+            cropTop: 0,
+            cropWidth: null,
             cwd: path.resolve("src/assets"),
             delay: null,
             force: false,
@@ -32,12 +38,16 @@ describe("parseCaptureArgs", () => {
             ]),
         ).toEqual({
             command: ["fastfetch", "--logo", "none"],
+            cropHeight: null,
+            cropTop: 0,
+            cropWidth: null,
             cwd: process.cwd(),
             delay: 1.5,
             force: true,
             keepOpen: false,
             name: "fastfetch",
             output: "/tmp/fastfetch.png",
+            profile: "standard",
         });
     });
 
@@ -56,30 +66,80 @@ describe("parseCaptureArgs", () => {
             parseCaptureArgs(["fastfetch", "--", "fastfetch", "--help"]),
         ).toMatchObject({ command: ["fastfetch", "--help"] });
     });
+
+    test("parses a validated crop height", () => {
+        expect(
+            parseCaptureArgs(["fast", "--crop-height", "360", "--", "fast"]),
+        ).toMatchObject({ cropHeight: 360 });
+    });
+
+    test("parses a crop offset", () => {
+        expect(
+            parseCaptureArgs([
+                "tt",
+                "--crop-top",
+                "300",
+                "--crop-height",
+                "500",
+                "--",
+                "tt",
+            ]),
+        ).toMatchObject({ cropHeight: 500, cropTop: 300 });
+    });
+
+    test("parses a validated crop width", () => {
+        expect(
+            parseCaptureArgs(["fast", "--crop-width", "950", "--", "fast"]),
+        ).toMatchObject({ cropWidth: 950 });
+    });
+
+    test("rejects crop widths outside the capture baseline", () => {
+        expect(() =>
+            parseCaptureArgs(["fast", "--crop-width", "2017", "--", "fast"]),
+        ).toThrow("cannot exceed 2016 pixels");
+    });
+
+    test("requires a crop height with a crop offset", () => {
+        expect(() =>
+            parseCaptureArgs(["tt", "--crop-top", "300", "--", "tt"]),
+        ).toThrow("--crop-top requires --crop-height");
+    });
+
+    test("rejects crop heights outside the capture baseline", () => {
+        expect(() =>
+            parseCaptureArgs(["fast", "--crop-height", "1369", "--", "fast"]),
+        ).toThrow("cannot exceed 1368 pixels");
+    });
+
+    test("parses the wide profile", () => {
+        expect(
+            parseCaptureArgs(["yazi", "--profile", "wide", "--", "yazi"]),
+        ).toMatchObject({ profile: "wide" });
+    });
 });
 
-describe("captureEnvironmentArgs", () => {
+describe("captureProcessEnvironment", () => {
     test("forwards display inputs without leaking unrelated environment", () => {
         expect(
-            captureEnvironmentArgs({
+            captureProcessEnvironment({
                 API_TOKEN: "secret",
                 LSCOLORS: "Gxfxcxdx",
                 LS_COLORS: "di=1;36:ln=35",
                 PATH: "/bin:/usr/bin",
                 XDG_CONFIG_HOME: "/tmp/config",
             }),
-        ).toEqual([
-            "--env=LSCOLORS=Gxfxcxdx",
-            "--env=LS_COLORS=di=1;36:ln=35",
-            "--env=PATH=/bin:/usr/bin",
-            "--env=XDG_CONFIG_HOME=/tmp/config",
-            "--env=COLORTERM=truecolor",
-        ]);
+        ).toEqual({
+            COLORTERM: "truecolor",
+            LSCOLORS: "Gxfxcxdx",
+            LS_COLORS: "di=1;36:ln=35",
+            PATH: "/bin:/usr/bin",
+            XDG_CONFIG_HOME: "/tmp/config",
+        });
     });
 
     test("preserves an explicit color terminal mode", () => {
-        expect(captureEnvironmentArgs({ COLORTERM: "24bit" })).toEqual([
-            "--env=COLORTERM=24bit",
-        ]);
+        expect(captureProcessEnvironment({ COLORTERM: "24bit" })).toEqual({
+            COLORTERM: "24bit",
+        });
     });
 });
