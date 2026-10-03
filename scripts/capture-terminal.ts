@@ -8,12 +8,15 @@ import {
     rename,
     rm,
     stat,
+    writeFile,
 } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { createInterface } from "node:readline/promises";
 import { setTimeout as sleep } from "node:timers/promises";
 import sharp from "sharp";
+import { imageDigest, type TerminalCapture } from "../src/lib/terminal-capture";
+import { normalizeTerminalHtml } from "../src/lib/terminal-html";
 
 const root = path.resolve(import.meta.dir, "..");
 const ghosttyApp = "/Applications/Ghostty.app";
@@ -33,6 +36,10 @@ const windowIdHelper = path.join(
 const commandRunner = path.join(
     import.meta.dir,
     "terminal-capture/run-command.zsh",
+);
+const textHelper = path.join(
+    import.meta.dir,
+    "terminal-capture/ghostty-text.swift",
 );
 const defaultOutputDirectory = path.join(
     os.homedir(),
@@ -81,6 +88,8 @@ type CaptureOptions = {
     cwd: string;
     delay: number | null;
     force: boolean;
+    html: boolean;
+    input: string[];
     keepOpen: boolean;
     name: string;
     output: string;
@@ -100,6 +109,8 @@ Options:
   --crop-width <px>  Crop empty space from the right after validation
   --profile <name>   Capture geometry: standard or wide (default: standard)
   --force            Replace an existing output file
+  --html             Export genuine colored text beside the PNG
+  --input <text>     Type a command into the dedicated shell (repeatable)
   --keep-open        Leave the temporary Ghostty instance open after capture
   --help             Show this help
 
@@ -158,6 +169,8 @@ export function parseCaptureArgs(args: string[]): CaptureOptions | null {
     let cropWidth: number | null = null;
     let delay: number | null = null;
     let force = false;
+    let html = false;
+    const input: string[] = [];
     let keepOpen = false;
     let output = path.join(defaultOutputDirectory, `${name}.png`);
     let profile: CaptureProfileName = "standard";
@@ -216,6 +229,13 @@ export function parseCaptureArgs(args: string[]): CaptureOptions | null {
             case "--force":
                 force = true;
                 break;
+            case "--html":
+                html = true;
+                break;
+            case "--input":
+                input.push(takeValue(optionArgs, index, arg));
+                index += 1;
+                break;
             case "--keep-open":
                 keepOpen = true;
                 break;
@@ -268,6 +288,8 @@ export function parseCaptureArgs(args: string[]): CaptureOptions | null {
         cwd: path.resolve(expandHome(cwd)),
         delay,
         force,
+        html,
+        input,
         keepOpen,
         name,
         output: path.resolve(expandHome(output)),
@@ -275,10 +297,35 @@ export function parseCaptureArgs(args: string[]): CaptureOptions | null {
     };
 }
 
-function run(command: string[], options: { ignoreExitCode?: boolean } = {}) {
+let nativeSdk: string | undefined;
+export function nativeAppleEnvironment(
+    environment: Record<string, string | undefined>,
+) {
+    const values = { ...environment };
+    delete values.SDKROOT;
+    delete values.DEVELOPER_DIR;
+    delete values.TOOLCHAINS;
+    return values;
+}
+function swiftArgs(helper: string, ...args: string[]) {
+    // Nix's SDKROOT can point to an SDK older than the installed Apple Swift.
+    nativeSdk ??= run(
+        ["/usr/bin/xcrun", "--sdk", "macosx", "--show-sdk-path"],
+        { env: nativeAppleEnvironment(Bun.env) },
+    );
+    return ["/usr/bin/swift", "-sdk", nativeSdk, helper, ...args];
+}
+
+function run(
+    command: string[],
+    options: {
+        ignoreExitCode?: boolean;
+        env?: Record<string, string | undefined>;
+    } = {},
+) {
     const result = Bun.spawnSync(command, {
         cwd: root,
-        env: Bun.env,
+        env: options.env ?? Bun.env,
         stdout: "pipe",
         stderr: "pipe",
     });
@@ -342,8 +389,12 @@ async function waitForWindowId(
 
     while (Date.now() < deadline) {
         const result = Bun.spawnSync(
-            ["/usr/bin/swift", windowIdHelper, String(pid), windowTitle],
-            { stdout: "pipe", stderr: "pipe" },
+            swiftArgs(windowIdHelper, String(pid), windowTitle),
+            {
+                stdout: "pipe",
+                stderr: "pipe",
+                env: nativeAppleEnvironment(Bun.env),
+            },
         );
         const windowId = Number(result.stdout.toString().trim());
         if (result.exitCode === 0 && Number.isInteger(windowId)) {
@@ -357,14 +408,12 @@ async function waitForWindowId(
 
 function assertWindowIdentity(pid: number, windowId: number) {
     const result = Bun.spawnSync(
-        [
-            "/usr/bin/swift",
-            windowIdHelper,
-            "--verify",
-            String(pid),
-            String(windowId),
-        ],
-        { stdout: "pipe", stderr: "pipe" },
+        swiftArgs(windowIdHelper, "--verify", String(pid), String(windowId)),
+        {
+            stdout: "pipe",
+            stderr: "pipe",
+            env: nativeAppleEnvironment(Bun.env),
+        },
     );
     if (result.exitCode !== 0) {
         throw new Error(
@@ -374,11 +423,17 @@ function assertWindowIdentity(pid: number, windowId: number) {
 }
 
 function assertScreenCapturePermission() {
-    const result = Bun.spawnSync(
-        ["/usr/bin/swift", windowIdHelper, "--preflight"],
-        { stdout: "pipe", stderr: "pipe" },
-    );
-    if (result.exitCode !== 0 || result.stdout.toString().trim() !== "true") {
+    const result = Bun.spawnSync(swiftArgs(windowIdHelper, "--preflight"), {
+        stdout: "pipe",
+        stderr: "pipe",
+        env: nativeAppleEnvironment(Bun.env),
+    });
+    if (result.exitCode !== 0) {
+        throw new Error(
+            `native window helper failed: ${result.stderr.toString().trim()}`,
+        );
+    }
+    if (result.stdout.toString().trim() !== "true") {
         throw new Error(
             "macOS Screen Recording permission is required for the shell running Bun; enable it in System Settings → Privacy & Security → Screen & System Audio Recording",
         );
@@ -450,6 +505,7 @@ async function captureTerminal(options: CaptureOptions) {
         captureProfile.config,
         windowIdHelper,
         commandRunner,
+        textHelper,
     ]) {
         await access(requiredPath);
     }
@@ -463,6 +519,23 @@ async function captureTerminal(options: CaptureOptions) {
     if (!options.force && (await fileExists(options.output))) {
         throw new Error(
             `${options.output} already exists; pass --force to replace it`,
+        );
+    }
+    const sidecarOutput = options.output.replace(/\.png$/, ".terminal.json");
+    if (options.html && !options.output.endsWith(".png"))
+        throw new Error("--html requires a .png output path");
+    if (options.html && !options.force && (await fileExists(sidecarOutput))) {
+        throw new Error(
+            `${sidecarOutput} already exists; pass --force to replace it`,
+        );
+    }
+    if (
+        !options.html &&
+        options.output.endsWith(".png") &&
+        (await fileExists(sidecarOutput))
+    ) {
+        throw new Error(
+            "this screenshot has a text companion; use --html to replace both together",
         );
     }
 
@@ -563,10 +636,18 @@ async function captureTerminal(options: CaptureOptions) {
 
     let rawOutput: string | undefined;
     let normalizedOutput: string | undefined;
+    let stagedSidecar: string | undefined;
     try {
         pid = await waitForCaptureProcess(captureId);
         let windowId = await waitForWindowId(pid, windowTitle);
         console.log(`[terminal-capture] ready: pid ${pid}, window ${windowId}`);
+        for (const input of options.input) {
+            await sleep(1_000);
+            assertWindowIdentity(pid, windowId);
+            run(swiftArgs(textHelper, String(pid), "input", input), {
+                env: nativeAppleEnvironment(Bun.env),
+            });
+        }
         await waitForCapture(options);
 
         // Re-resolve immediately before capture. During an unbounded manual
@@ -658,6 +739,26 @@ async function captureTerminal(options: CaptureOptions) {
             );
         }
 
+        if (options.html) {
+            assertWindowIdentity(pid, windowId);
+            const html = run(swiftArgs(textHelper, String(pid), "export"), {
+                env: nativeAppleEnvironment(Bun.env),
+            });
+            normalizeTerminalHtml(html);
+            const capture: TerminalCapture = {
+                version: 1,
+                imageSha256: imageDigest(await readFile(normalizedOutput)),
+                pixelRatio: 2,
+                html,
+            };
+            stagedSidecar = `${sidecarOutput}.${captureId}.tmp`;
+            await writeFile(
+                stagedSidecar,
+                `${JSON.stringify(capture, null, 2)}\n`,
+                { flag: "wx" },
+            );
+        }
+
         if (options.force) {
             await rename(normalizedOutput, options.output);
         } else {
@@ -665,6 +766,17 @@ async function captureTerminal(options: CaptureOptions) {
             await rm(normalizedOutput);
         }
         normalizedOutput = undefined;
+        if (stagedSidecar) {
+            if (options.force) await rename(stagedSidecar, sidecarOutput);
+            else {
+                await link(stagedSidecar, sidecarOutput);
+                await rm(stagedSidecar);
+            }
+            stagedSidecar = undefined;
+            console.log(
+                `[terminal-capture] wrote selectable text -> ${sidecarOutput}`,
+            );
+        }
 
         console.log(
             `[terminal-capture] wrote ${metadata.width}×${metadata.height} PNG -> ${options.output}`,
@@ -675,6 +787,7 @@ async function captureTerminal(options: CaptureOptions) {
         }
         if (rawOutput) await rm(rawOutput, { force: true });
         if (normalizedOutput) await rm(normalizedOutput, { force: true });
+        if (stagedSidecar) await rm(stagedSidecar, { force: true });
         await rm(commandStatusFile, { force: true });
         closeCaptureInstance();
     }

@@ -1,20 +1,55 @@
 ---
 import type { ImageMetadata } from "astro";
+import { terminalCaptureFor } from "@/lib/terminal-assets";
+import { normalizeTerminalHtml } from "@/lib/terminal-html";
 
 type Props = {
     alt: string;
     image: ImageMetadata;
     label: string;
+    /** Native Ghostty HTML. Usually discovered from a matching .terminal.json. */
+    html?: string;
+    /** Existing captures use the checked Retina profile. */
+    pixelRatio?: number;
 };
 
-const { alt, image, label } = Astro.props;
+const { alt, image, label, html, pixelRatio: explicitRatio } = Astro.props;
+const capture = terminalCaptureFor(image);
+const source = html ?? capture?.html;
+const terminal =
+    source === undefined ? undefined : normalizeTerminalHtml(source);
+const pixelRatio = explicitRatio ?? capture?.pixelRatio ?? 2;
+if (!Number.isFinite(pixelRatio) || pixelRatio < 1 || pixelRatio > 4) {
+    throw new Error("terminal pixelRatio must be between 1 and 4");
+}
 ---
 
-<figure class="terminal-screenshot not-prose">
-    <a
-        href={image.src}
-        data-plain-link
-        aria-label={`${label} — open the full-size capture`}
+<figure
+    class="terminal-screenshot not-prose"
+    data-terminal
+    data-view={terminal ? "text" : "capture"}
+    style={`--capture-width: ${image.width / pixelRatio}px;`}
+>
+    {
+        terminal && (
+            <pre
+                class="terminal-text terminal-viewport"
+                data-terminal-text
+                style={terminal.style}
+                tabindex="0"
+                role="region"
+                aria-label={`${label} — selectable terminal output`}
+                set:html={`<code>${terminal.html}</code>`}
+            />
+        )
+    }
+    <div
+        class="terminal-image terminal-viewport"
+        data-terminal-image
+        hidden={Boolean(terminal)}
+        tabindex="0"
+        role="region"
+        aria-label={`${label} — scrollable terminal capture`}
     >
         <img
             src={image.src}
@@ -24,28 +59,291 @@ const { alt, image, label } = Astro.props;
             loading="lazy"
             decoding="async"
         />
-    </a>
+    </div>
+    <figcaption class="terminal-controls">
+        <div class="terminal-views" role="group" aria-label="Terminal display">
+            {
+                terminal && (
+                    <>
+                        <button
+                            type="button"
+                            data-terminal-view="text"
+                            aria-pressed="true"
+                            hidden
+                        >
+                            Text
+                        </button>
+                        <button
+                            type="button"
+                            data-terminal-view="capture"
+                            aria-pressed="false"
+                            hidden
+                        >
+                            Capture
+                        </button>
+                    </>
+                )
+            }
+            <button type="button" data-terminal-fit aria-pressed="false" hidden
+                >Fit width</button
+            >
+        </div>
+        <div class="terminal-actions">
+            {
+                terminal && (
+                    <button type="button" data-terminal-copy hidden>
+                        Copy text
+                    </button>
+                )
+            }
+            <a
+                href={image.src}
+                data-plain-link
+                aria-label={`${label} — open the original capture`}
+                >Original ↗</a
+            >
+        </div>
+        <span
+            class="terminal-status"
+            data-terminal-status
+            role="status"
+            aria-live="polite"></span>
+    </figcaption>
 </figure>
 
+<script>
+    function initTerminals() {
+        for (const figure of document.querySelectorAll<HTMLElement>(
+            "[data-terminal]",
+        )) {
+            if (figure.dataset.ready) continue;
+            figure.dataset.ready = "true";
+            const text = figure.querySelector<HTMLElement>(
+                "[data-terminal-text]",
+            );
+            const image = figure.querySelector<HTMLElement>(
+                "[data-terminal-image]",
+            );
+            const fit = figure.querySelector<HTMLButtonElement>(
+                "[data-terminal-fit]",
+            );
+            const copy = figure.querySelector<HTMLButtonElement>(
+                "[data-terminal-copy]",
+            );
+            const views = figure.querySelectorAll<HTMLButtonElement>(
+                "[data-terminal-view]",
+            );
+            function updateFit() {
+                if (!image || !fit) return;
+                fit.hidden =
+                    figure.dataset.view !== "capture" ||
+                    (!figure.classList.contains("is-fit") &&
+                        image.scrollWidth <= image.clientWidth + 1);
+            }
+            for (const button of views) {
+                button.hidden = false;
+                button.addEventListener("click", () => {
+                    const view = button.dataset.terminalView;
+                    figure.dataset.view = view;
+                    if (text) text.hidden = view !== "text";
+                    if (image) image.hidden = view !== "capture";
+                    if (copy) copy.hidden = view !== "text";
+                    for (const item of views)
+                        item.setAttribute(
+                            "aria-pressed",
+                            String(item === button),
+                        );
+                    updateFit();
+                });
+            }
+            fit?.addEventListener("click", () => {
+                const fitting = figure.classList.toggle("is-fit");
+                fit.setAttribute("aria-pressed", String(fitting));
+                fit.textContent = fitting ? "Actual size" : "Fit width";
+                updateFit();
+            });
+            if (copy && text) {
+                copy.hidden = false;
+                copy.addEventListener("click", async () => {
+                    const status = figure.querySelector<HTMLElement>(
+                        "[data-terminal-status]",
+                    );
+                    try {
+                        await navigator.clipboard.writeText(
+                            text.querySelector("code")?.textContent ?? "",
+                        );
+                        if (status) status.textContent = "Copied";
+                    } catch {
+                        if (status)
+                            status.textContent =
+                                "Copy failed. Select the text to copy it.";
+                    }
+                });
+            }
+            image?.querySelector("img")?.addEventListener("load", updateFit);
+            const observer = new ResizeObserver(updateFit);
+            observer.observe(figure);
+            document.addEventListener(
+                "astro:before-swap",
+                () => observer.disconnect(),
+                { once: true },
+            );
+            updateFit();
+        }
+    }
+    initTerminals();
+    document.addEventListener("astro:page-load", initTerminals);
+</script>
+
 <style>
+    @font-face {
+        font-family: "Terminal Capture Mono";
+        src: url("../assets/fonts/terminal/geist-mono-nerd-regular.woff2")
+            format("woff2");
+        font-weight: 400;
+        font-display: swap;
+        unicode-range: U+0-D7FF, U+F900-EFFFF;
+    }
+    @font-face {
+        font-family: "Terminal Capture Mono";
+        src: url("../assets/fonts/terminal/geist-mono-nerd-bold.woff2")
+            format("woff2");
+        font-weight: 700;
+        font-display: swap;
+        unicode-range: U+0-D7FF, U+F900-EFFFF;
+    }
+    @font-face {
+        font-family: "Terminal Capture Symbols";
+        src: url("../assets/fonts/terminal/geist-mono-nerd-symbols.woff2")
+            format("woff2");
+        font-weight: 400 700;
+        font-display: swap;
+        unicode-range: U+E000-F8FF, U+F0000-FFFFD, U+100000-10FFFD;
+    }
     .terminal-screenshot {
         margin-block: 1.5rem;
+        width: min(100%, var(--capture-width));
+        min-width: 0;
     }
-
-    .terminal-screenshot a {
-        display: block;
+    @media (min-width: 1024px) {
+        .terminal-screenshot {
+            --terminal-stage-width: min(
+                var(--capture-width),
+                calc(100vw - 4rem)
+            );
+            width: var(--terminal-stage-width);
+            max-width: none;
+            margin-inline: min(
+                0px,
+                calc(50% - var(--terminal-stage-width) / 2)
+            );
+        }
+    }
+    .terminal-viewport {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
         border-radius: calc(var(--radius) - 2px);
-        outline: none;
+        scrollbar-width: thin;
     }
-
-    .terminal-screenshot a:focus-visible {
-        outline: 2px solid color-mix(in oklab, var(--ring) 58%, transparent);
+    .terminal-viewport[hidden],
+    .terminal-controls [hidden] {
+        display: none;
+    }
+    .terminal-image img {
+        display: block;
+        width: var(--capture-width);
+        max-width: none;
+        height: auto;
+    }
+    .is-fit .terminal-image img {
+        width: 100%;
+    }
+    .terminal-text {
+        margin: 0;
+        padding: 20px 24px;
+        background: #303446;
+        color: #c6d0f5;
+        font-family:
+            "Terminal Capture Mono", "Terminal Capture Symbols", "Geist Mono",
+            monospace;
+        font-size: 16px;
+        line-height: 24px;
+        font-variant-ligatures: none;
+        font-weight: 400;
+        font-style: normal;
+        letter-spacing: 0;
+        white-space: pre;
+        tab-size: 8;
+        user-select: text;
+    }
+    .terminal-text :global(code) {
+        font: inherit;
+        color: inherit;
+        background: none;
+        padding: 0;
+    }
+    .terminal-text :global(a) {
+        color: inherit;
+        text-decoration: underline;
+    }
+    .terminal-controls {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 0.25rem 1rem;
+        padding-top: 0.35rem;
+        color: var(--muted-foreground);
+        font-family: var(--font-brand);
+        font-size: 0.6875rem;
+        line-height: 1.75;
+    }
+    .terminal-views,
+    .terminal-actions {
+        display: flex;
+        align-items: baseline;
+        gap: 1rem;
+    }
+    .terminal-actions {
+        margin-left: auto;
+    }
+    .terminal-controls button,
+    .terminal-controls a {
+        min-height: 32px;
+        display: inline-flex;
+        align-items: center;
+        padding: 0;
+        color: inherit;
+        background: none;
+        border: 0;
+        border-radius: 0;
+        font: inherit;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    .terminal-controls [aria-pressed="true"] {
+        color: var(--foreground);
+        text-decoration: underline;
+        text-underline-offset: 4px;
+    }
+    .terminal-controls button:hover,
+    .terminal-controls a:hover {
+        color: var(--foreground);
+    }
+    @media (pointer: coarse) {
+        .terminal-controls button,
+        .terminal-controls a {
+            min-height: 44px;
+        }
+    }
+    .terminal-screenshot :focus-visible {
+        outline: 2px solid var(--ring);
         outline-offset: 3px;
     }
-
-    .terminal-screenshot img {
-        width: 100%;
-        height: auto;
-        border-radius: inherit;
+    .terminal-status {
+        flex-basis: 100%;
+    }
+    .terminal-status:empty {
+        display: none;
     }
 </style>

@@ -61,4 +61,11 @@ function TooltipContent({
     );
 }
 
-export { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider };
+// Older MDX imports used this capitalization, including an unused import in jacobians.
+export {
+    Tooltip,
+    Tooltip as ToolTip,
+    TooltipTrigger,
+    TooltipContent,
+    TooltipProvider,
+};

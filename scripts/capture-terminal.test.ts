@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import path from "node:path";
 import {
     captureProcessEnvironment,
+    nativeAppleEnvironment,
     parseCaptureArgs,
 } from "./capture-terminal";
 
@@ -44,6 +45,8 @@ describe("parseCaptureArgs", () => {
             cwd: process.cwd(),
             delay: 1.5,
             force: true,
+            html: false,
+            input: [],
             keepOpen: false,
             name: "fastfetch",
             output: "/tmp/fastfetch.png",
@@ -57,8 +60,39 @@ describe("parseCaptureArgs", () => {
         );
     });
 
+    test("exports native text and stages a real shell command", () => {
+        expect(
+            parseCaptureArgs([
+                "fastfetch",
+                "--html",
+                "--input",
+                "clear; fastfetch",
+                "--",
+                "nu",
+            ]),
+        ).toMatchObject({
+            html: true,
+            input: ["clear; fastfetch"],
+            command: ["nu"],
+        });
+    });
+
     test("returns null for help", () => {
         expect(parseCaptureArgs(["--help"])).toBeNull();
+    });
+
+    test("stages successive commands in the native shell", () => {
+        expect(
+            parseCaptureArgs([
+                "fast",
+                "--input",
+                "clear",
+                "--input",
+                "fast",
+                "--",
+                "nu",
+            ]),
+        ).toMatchObject({ input: ["clear", "fast"] });
     });
 
     test("passes help flags through to the captured command", () => {
@@ -115,6 +149,23 @@ describe("parseCaptureArgs", () => {
         expect(
             parseCaptureArgs(["yazi", "--profile", "wide", "--", "yazi"]),
         ).toMatchObject({ profile: "wide" });
+    });
+});
+
+describe("nativeAppleEnvironment", () => {
+    test("uses Apple's selected SDK without disturbing the terminal environment", () => {
+        const environment = {
+            SDKROOT: "/nix/store/old-sdk",
+            DEVELOPER_DIR: "/nix/store/tools",
+            TOOLCHAINS: "old",
+            PATH: "/nix/bin:/usr/bin",
+            HOME: "/Users/test",
+        };
+        expect(nativeAppleEnvironment(environment)).toEqual({
+            PATH: environment.PATH,
+            HOME: environment.HOME,
+        });
+        expect(environment.SDKROOT).toBe("/nix/store/old-sdk");
     });
 });
 

@@ -1,5 +1,5 @@
 import { defineCollection, z } from "astro:content";
-import { glob } from "astro/loaders";
+import { contentGlob } from "./lib/content-glob";
 
 const contentRoot =
     process.env.CONTENT_PREVIEW === "true"
@@ -7,10 +7,7 @@ const contentRoot =
         : "./src/content";
 
 const posts = defineCollection({
-    loader: glob({
-        pattern: ["*.{md,mdx}"],
-        base: `${contentRoot}/posts`,
-    }),
+    loader: contentGlob(`${contentRoot}/posts`),
     schema: ({ image }) =>
         z
             .object({
@@ -33,10 +30,7 @@ const posts = defineCollection({
 });
 
 const pages = defineCollection({
-    loader: glob({
-        pattern: ["*.{md,mdx}"],
-        base: `${contentRoot}/pages`,
-    }),
+    loader: contentGlob(`${contentRoot}/pages`),
     schema: z.object({
         title: z.string(),
         description: z.string(),
