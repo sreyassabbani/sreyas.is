@@ -1,0 +1,50 @@
+import type { ImageMetadata } from "astro";
+
+type Props = {
+    alt: string;
+    image: ImageMetadata;
+    label: string;
+};
+
+const { alt, image, label } = Astro.props;
+---
+
+<figure class="terminal-screenshot not-prose">
+    <a
+        href={image.src}
+        data-plain-link
+        aria-label={`${label} — open the full-size capture`}
+    >
+        <img
+            src={image.src}
+            width={image.width}
+            height={image.height}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+        />
+    </a>
+</figure>
+
+<style>
+    .terminal-screenshot {
+        margin-block: 1.5rem;
+    }
+
+    .terminal-screenshot a {
+        display: block;
+        border-radius: calc(var(--radius) - 2px);
+        outline: none;
+    }
+
+    .terminal-screenshot a:focus-visible {
+        outline: 2px solid color-mix(in oklab, var(--ring) 58%, transparent);
+        outline-offset: 3px;
+    }
+
+    .terminal-screenshot img {
+        width: 100%;
+        height: auto;
+        border-radius: inherit;
+    }
+</style>
