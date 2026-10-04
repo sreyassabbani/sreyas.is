@@ -17,17 +17,26 @@ const railChildListClass =
 ---
 
 <aside
-    class="group/tocrail fixed inset-y-0 left-0 z-20 hidden w-56 xl:block"
+    class="group/tocrail pointer-events-none fixed inset-y-0 left-0 z-20 hidden w-56 xl:block"
     data-post-rail
     aria-label={ariaLabel}
 >
-    <div
-        class="pointer-events-auto absolute inset-y-0 left-0 w-7"
-        aria-hidden="true"
+    <button
+        type="button"
+        class="pointer-events-auto absolute inset-y-0 left-0 appearance-none border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        style="width: var(--post-rail-trigger-width, 28px)"
+        data-rail-trigger
+        aria-label="Open post sections"
+        aria-controls="post-rail-panel"
+        aria-expanded="false"
     >
-    </div>
+    </button>
     <div
-        class="pointer-events-none absolute left-0 top-1/2 max-h-[calc(100vh-2rem)] w-52 -translate-x-40 -translate-y-1/2 overflow-y-auto rounded-r-xl border-y border-r border-border bg-card/95 px-3 py-3 opacity-0 transition-all duration-300 ease-out group-hover/tocrail:pointer-events-auto group-hover/tocrail:translate-x-0 group-hover/tocrail:opacity-100 group-data-[open=true]/tocrail:pointer-events-auto group-data-[open=true]/tocrail:translate-x-0 group-data-[open=true]/tocrail:opacity-100"
+        id="post-rail-panel"
+        class="pointer-events-none absolute left-0 top-1/2 max-h-[calc(100vh-2rem)] w-52 -translate-x-40 -translate-y-1/2 overflow-y-auto rounded-r-xl border-y border-r border-border bg-card/95 px-3 py-3 opacity-0 transition-all duration-300 ease-out group-data-[open=true]/tocrail:pointer-events-auto group-data-[open=true]/tocrail:translate-x-0 group-data-[open=true]/tocrail:opacity-100"
+        data-rail-panel
+        inert
+        aria-hidden="true"
     >
         <nav>
             <ul class="m-0 list-none p-0">
@@ -71,7 +80,9 @@ const railChildListClass =
     </div>
 </aside>
 
-<script is:inline>
+<script>
+    import { measurePostRailHoverWidth } from "@/lib/post-rail-geometry";
+
     (() => {
         let cleanup = () => {};
 
@@ -83,13 +94,29 @@ const railChildListClass =
                 cleanup = () => {};
                 return;
             }
+            const trigger = rail.querySelector("[data-rail-trigger]");
+            const panel = rail.querySelector("[data-rail-panel]");
+            if (
+                !(trigger instanceof HTMLButtonElement) ||
+                !(panel instanceof HTMLElement)
+            ) {
+                return;
+            }
+            const post =
+                document.querySelector("main article") ??
+                document.querySelector("main .content-prose");
 
             const links = Array.from(
                 rail.querySelectorAll("[data-rail-link]"),
-            ).filter((link) => link instanceof HTMLAnchorElement);
+            ).filter(
+                (link): link is HTMLAnchorElement =>
+                    link instanceof HTMLAnchorElement,
+            );
             const groups = Array.from(
                 rail.querySelectorAll("[data-rail-group]"),
-            ).filter((group) => group instanceof HTMLElement);
+            ).filter(
+                (group): group is HTMLElement => group instanceof HTMLElement,
+            );
             const observedHeadings = links
                 .map((link) => {
                     const slug = link.dataset.railLink;
@@ -102,15 +129,27 @@ const railChildListClass =
 
                     return { slug, element };
                 })
-                .filter(Boolean);
+                .filter((heading) => heading !== null);
 
             let activeSlug = observedHeadings[0]?.slug ?? "top";
+            let pinned = false;
+            let triggerWidth = 28;
+            let geometryTimer: number | undefined;
+            let geometryFrame: number | undefined;
+            let lastGeometryAt = 0;
 
-            const setRailOpen = (open) => {
+            const setRailOpen = (open: boolean) => {
                 rail.dataset.open = open ? "true" : "false";
+                trigger.setAttribute("aria-expanded", String(open));
+                trigger.setAttribute(
+                    "aria-label",
+                    open ? "Close post sections" : "Open post sections",
+                );
+                panel.inert = !open;
+                panel.setAttribute("aria-hidden", String(!open));
             };
 
-            const setOpenGroup = (slug) => {
+            const setOpenGroup = (slug: string | null | undefined) => {
                 groups.forEach((group) => {
                     group.dataset.open =
                         slug &&
@@ -121,7 +160,7 @@ const railChildListClass =
                 });
             };
 
-            const syncExpandedGroup = (slug) => {
+            const syncExpandedGroup = (slug: string) => {
                 const activeChildLink = rail.querySelector(
                     `[data-parent-slug][data-rail-link="${slug}"]`,
                 );
@@ -134,7 +173,7 @@ const railChildListClass =
                 setOpenGroup(null);
             };
 
-            const setActiveSlug = (slug) => {
+            const setActiveSlug = (slug: string) => {
                 activeSlug = slug;
 
                 links.forEach((link) => {
@@ -145,8 +184,77 @@ const railChildListClass =
                 syncExpandedGroup(slug);
             };
 
-            const onRailEnter = () => setRailOpen(true);
+            const updateGeometry = () => {
+                if (!post || getComputedStyle(rail).display === "none") return;
+                triggerWidth = measurePostRailHoverWidth(post);
+                rail.style.setProperty(
+                    "--post-rail-trigger-width",
+                    `${triggerWidth}px`,
+                );
+                lastGeometryAt = performance.now();
+            };
+
+            const scheduleGeometry = () => {
+                if (geometryTimer !== undefined) return;
+                geometryTimer = window.setTimeout(
+                    () => {
+                        geometryFrame = requestAnimationFrame(() => {
+                            geometryTimer = undefined;
+                            geometryFrame = undefined;
+                            updateGeometry();
+                        });
+                    },
+                    Math.max(0, 80 - (performance.now() - lastGeometryAt)),
+                );
+            };
+
+            const onRailEnter = (event: MouseEvent) => {
+                // Re-check before opening, even if layout changed since the last scroll/resize event.
+                updateGeometry();
+                if (
+                    rail.dataset.open === "true" ||
+                    event.clientX <= triggerWidth
+                ) {
+                    setRailOpen(true);
+                }
+            };
             const onRailLeave = () => {
+                if (pinned || panel.contains(document.activeElement)) return;
+                setRailOpen(false);
+                syncExpandedGroup(activeSlug);
+            };
+            const onTriggerClick = () => {
+                pinned = rail.dataset.open !== "true";
+                setRailOpen(pinned);
+            };
+            const onRailFocus = (event: FocusEvent) => {
+                if (
+                    !(event.target instanceof HTMLElement) ||
+                    !panel.contains(event.target)
+                ) {
+                    return;
+                }
+                setRailOpen(true);
+                const group = event.target.closest("[data-rail-group]");
+                if (group instanceof HTMLElement) {
+                    setOpenGroup(group.dataset.railGroup);
+                }
+            };
+            const onRailBlur = (event: FocusEvent) => {
+                if (
+                    !pinned &&
+                    !rail.matches(":hover") &&
+                    !rail.contains(event.relatedTarget as Node | null)
+                ) {
+                    setRailOpen(false);
+                    syncExpandedGroup(activeSlug);
+                }
+            };
+            const onRailKeyDown = (event: KeyboardEvent) => {
+                if (event.key !== "Escape") return;
+                event.preventDefault();
+                pinned = false;
+                if (panel.contains(document.activeElement)) trigger.focus();
                 setRailOpen(false);
                 syncExpandedGroup(activeSlug);
             };
@@ -168,6 +276,35 @@ const railChildListClass =
 
             rail.addEventListener("mouseenter", onRailEnter);
             rail.addEventListener("mouseleave", onRailLeave);
+            rail.addEventListener("focusin", onRailFocus);
+            rail.addEventListener("focusout", onRailBlur);
+            rail.addEventListener("keydown", onRailKeyDown);
+            trigger.addEventListener("click", onTriggerClick);
+
+            const resizeObserver = new ResizeObserver(scheduleGeometry);
+            const mutationObserver = new MutationObserver(scheduleGeometry);
+            if (post) {
+                resizeObserver.observe(post);
+                mutationObserver.observe(post, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    attributeFilter: [
+                        "class",
+                        "style",
+                        "hidden",
+                        "width",
+                        "height",
+                    ],
+                });
+                post.addEventListener("load", scheduleGeometry, true);
+            }
+            document.addEventListener("scroll", scheduleGeometry, {
+                capture: true,
+                passive: true,
+            });
+            window.addEventListener("resize", scheduleGeometry);
+            document.fonts.addEventListener("loadingdone", scheduleGeometry);
 
             const observer = new IntersectionObserver(
                 (entries) => {
@@ -197,11 +334,28 @@ const railChildListClass =
 
             setActiveSlug(activeSlug);
             setRailOpen(false);
+            updateGeometry();
 
             cleanup = () => {
                 observer.disconnect();
                 rail.removeEventListener("mouseenter", onRailEnter);
                 rail.removeEventListener("mouseleave", onRailLeave);
+                rail.removeEventListener("focusin", onRailFocus);
+                rail.removeEventListener("focusout", onRailBlur);
+                rail.removeEventListener("keydown", onRailKeyDown);
+                trigger.removeEventListener("click", onTriggerClick);
+                resizeObserver.disconnect();
+                mutationObserver.disconnect();
+                if (geometryTimer !== undefined) clearTimeout(geometryTimer);
+                if (geometryFrame !== undefined)
+                    cancelAnimationFrame(geometryFrame);
+                post?.removeEventListener("load", scheduleGeometry, true);
+                document.removeEventListener("scroll", scheduleGeometry, true);
+                window.removeEventListener("resize", scheduleGeometry);
+                document.fonts.removeEventListener(
+                    "loadingdone",
+                    scheduleGeometry,
+                );
                 removeGroupListeners.forEach((removeListener) =>
                     removeListener(),
                 );
