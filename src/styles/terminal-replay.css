@@ -1,0 +1,164 @@
+:root {
+    color-scheme: normal;
+}
+
+html,
+body {
+    display: block;
+    min-height: 0;
+    background: var(--terminal-background, #303446);
+}
+
+#frame {
+    position: relative;
+    display: block;
+    padding: 0;
+    margin: 0;
+    background: var(--terminal-background, #303446);
+    box-shadow: none;
+    width: 100%;
+}
+
+#term {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+}
+
+#term:focus-visible {
+    outline: 1px solid var(--terminal-focus-color, #8caaee);
+    outline-offset: -2px;
+}
+
+#term ::selection {
+    background: var(--terminal-selection-background, #626880);
+    color: var(--terminal-foreground, #c6d0f5);
+}
+
+#controls {
+    position: static;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    margin: 0 24px 8px 12px;
+    color: var(--terminal-controls-color, #b5bfe2);
+    font:
+        11px / 1 "Geist Mono",
+        monospace;
+}
+
+#controls #play {
+    display: grid;
+    place-items: center;
+    flex: 0 0 44px;
+    width: 44px;
+    min-width: 0;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+#controls #play:hover {
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    color: var(--terminal-foreground, #c6d0f5);
+}
+
+#controls #play:active {
+    background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+#controls #play:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+#play svg {
+    grid-area: 1 / 1;
+}
+
+#controls input[type="range"] {
+    appearance: none;
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    margin: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    --played: 100%;
+}
+
+#progress::-webkit-slider-runnable-track {
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(
+        to right,
+        color-mix(in srgb, currentColor 65%, transparent) var(--played),
+        color-mix(in srgb, currentColor 20%, transparent) var(--played)
+    );
+}
+
+#progress::-moz-range-track {
+    height: 2px;
+    border-radius: 2px;
+    background: color-mix(in srgb, currentColor 20%, transparent);
+}
+
+#progress::-moz-range-progress {
+    height: 2px;
+    border-radius: 2px;
+    background: color-mix(in srgb, currentColor 65%, transparent);
+}
+
+#progress::-webkit-slider-thumb {
+    appearance: none;
+    width: 8px;
+    height: 8px;
+    margin-top: -3px;
+    border: 0;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+#progress::-moz-range-thumb {
+    width: 8px;
+    height: 8px;
+    border: 0;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+#controls :focus-visible {
+    outline: 1px solid var(--terminal-focus-color, #8caaee);
+    outline-offset: -6px;
+}
+
+#controls #progress:focus-visible {
+    outline: none;
+}
+
+#progress:focus-visible::-webkit-slider-thumb {
+    outline: 2px solid var(--terminal-focus-color, #8caaee);
+    outline-offset: 3px;
+}
+
+#progress:focus-visible::-moz-range-thumb {
+    outline: 2px solid var(--terminal-focus-color, #8caaee);
+    outline-offset: 3px;
+}
+
+#time {
+    display: none;
+}
+
+#controls label {
+    display: none;
+}

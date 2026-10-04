@@ -1,0 +1,110 @@
+---
+import regular from "@fontsource/geist-mono/files/geist-mono-latin-400-normal.woff2?inline";
+import bold from "@fontsource/geist-mono/files/geist-mono-latin-700-normal.woff2?inline";
+import styles from "@/styles/terminal-replay.css?raw";
+
+type Props = { html: string; label: string };
+const { html, label } = Astro.props;
+const geometry = html.match(
+    /<svg\b[^>]*\bwidth="([\d.]+)"[^>]*\bheight="([\d.]+)"/,
+);
+if (!geometry) {
+    throw new Error(
+        "Regenerate this replay with the local SVG-backed tcut exporter.",
+    );
+}
+const width = Number(geometry[1]);
+const stageHeight = Number(geometry[2]);
+const height = stageHeight + 52;
+
+// tcut owns the replay; the site supplies fonts and controls within the terminal.
+const document = html.replace(
+    "</head>",
+    `<style>
+    @font-face { font-family: "Geist Mono"; font-style: normal; font-weight: 400; src: url("${regular}") format("woff2"); }
+    @font-face { font-family: "Geist Mono"; font-style: normal; font-weight: 700; src: url("${bold}") format("woff2"); }
+    ${styles}
+    </style></head>`,
+);
+---
+
+<figure
+    class="terminal-replay terminal-media terminal-stage not-prose"
+    style={`--terminal-width: ${width}px; --terminal-height: ${height}px;`}
+>
+    <iframe
+        title={label}
+        srcdoc={document}
+        width={width}
+        height={height}
+        loading="lazy"
+        sandbox="allow-scripts"></iframe>
+    <span class="terminal-replay-edge" aria-hidden="true"></span>
+</figure>
+
+<script>
+    for (const replay of document.querySelectorAll<HTMLElement>(
+        ".terminal-replay",
+    )) {
+        const frame = replay.querySelector("iframe");
+        const edge = replay.querySelector(".terminal-replay-edge");
+        if (!frame || !edge) continue;
+
+        let visible = false;
+        let ready = false;
+        let started = false;
+        const start = () => {
+            if (!visible || !ready || started) return;
+            started = true;
+            frame.contentWindow?.postMessage({ type: "tcut:play-once" }, "*");
+            observer.disconnect();
+        };
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                visible = Boolean(
+                    entry?.isIntersecting && entry.intersectionRatio === 1,
+                );
+                start();
+            },
+            { threshold: 1 },
+        );
+        window.addEventListener("message", (event) => {
+            if (
+                event.source !== frame.contentWindow ||
+                event.data?.type !== "tcut:ready"
+            ) {
+                return;
+            }
+            ready = true;
+            start();
+        });
+        const checkReady = () =>
+            frame.contentWindow?.postMessage({ type: "tcut:ready" }, "*");
+        frame.addEventListener("load", checkReady);
+        checkReady();
+        observer.observe(edge);
+    }
+</script>
+
+<style>
+    .terminal-replay {
+        position: relative;
+    }
+
+    .terminal-replay iframe {
+        display: block;
+        width: 100%;
+        max-width: none;
+        border: 0;
+        height: var(--terminal-height);
+    }
+
+    .terminal-replay-edge {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 1px;
+        height: 1px;
+        pointer-events: none;
+    }
+</style>
