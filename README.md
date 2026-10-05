@@ -30,6 +30,23 @@ The private repository's workflow runs after source pushes, manually, and at the
 
 Private entry dependencies live under per-entry directories such as `posts/components/<post-name>`. Astro's collections load only top-level entry documents, so dependency files cannot become routes themselves.
 
+### Terminal captures
+
+`tcut capture --post <slug> --name <name> -- <command>` records using the shared
+machine profile, writes a selectable still and replay into the private content
+repository, and copies an MDX embed. Stills are the default; add `--video` for a
+replay. Omit the command to open a capture shell, or add `--interactive` for a
+game/editor; Ctrl+] captures it while it is visible. Without `--post`, captures
+save in the current directory. `--no-svg` uses the native macOS screenshot picker.
+Paste the block into the canonical post and run
+`bun dev` to review it.
+
+The full workflow is documented in
+`~/workflow/content/docs/terminal-captures.md`. `TerminalOutput.astro` embeds
+SVG stills; `TerminalReplay.astro` embeds replay HTML and starts playback once
+its bottom edge enters the viewport. Capture and export belong to tcut; the site
+owns presentation.
+
 ### Formatting and checks
 
 Biome owns formatting and linting except for `*.astro`, which uses Prettier with `prettier-plugin-astro`.

@@ -5,7 +5,6 @@
     "scripts": {
         "content:sync": "bun --bun ./scripts/mount-content.ts",
         "content:watch": "bun --bun ./scripts/watch-content.ts",
-        "capture:terminal": "bun --bun ./scripts/capture-terminal.ts",
         "dev": "bun --bun ./scripts/dev.ts",
         "build": "bun --bun ./node_modules/.bin/astro build",
         "preview": "bun --bun ./node_modules/.bin/astro preview",
@@ -54,7 +53,6 @@
         "lucide-react": "^1.7.0",
         "manim-web": "^0.3.21",
         "next-themes": "^0.4.6",
-        "parse5": "7.3.0",
         "react": "^19.2.1",
         "react-day-picker": "^9.14.0",
         "react-dom": "^19.2.1",

@@ -1,4 +1,42 @@
 @layer components {
+    .terminal-media {
+        width: min(100%, var(--terminal-width));
+        min-width: 0;
+        max-width: none;
+        margin-block: 1.5rem;
+    }
+
+    .terminal-stage {
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: thin;
+        border-radius: 8px;
+    }
+
+    .terminal-stage:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: -2px;
+    }
+
+    .terminal-stage ::selection {
+        background: #626880;
+        color: #c6d0f5;
+    }
+
+    @media (min-width: 52rem) {
+        .terminal-media {
+            --terminal-stage-width: min(
+                var(--terminal-width),
+                calc(100vw - 4rem)
+            );
+            width: var(--terminal-stage-width);
+            margin-inline: min(
+                0px,
+                calc(50% - var(--terminal-stage-width) / 2)
+            );
+        }
+    }
+
     .content-prose {
         @apply prose prose-neutral max-w-none text-[0.98rem] leading-7 text-foreground;
     }

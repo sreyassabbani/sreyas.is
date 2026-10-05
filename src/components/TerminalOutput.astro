@@ -1,0 +1,26 @@
+---
+type Props = { svg: string; label: string };
+const { svg, label } = Astro.props;
+const width = Number(svg.match(/<svg\b[^>]*\bwidth="([\d.]+)"/)?.[1]);
+---
+
+<figure
+    class="terminal-output terminal-media not-prose"
+    style={`--terminal-width: ${width}px;`}
+>
+    <div
+        class="terminal-stage"
+        tabindex="0"
+        role="region"
+        aria-label={label}
+        set:html={svg.replace(/^<\?xml[^>]*>\s*/, "")}
+    />
+</figure>
+
+<style>
+    .terminal-output :global(svg) {
+        display: block;
+        max-width: none;
+        user-select: text;
+    }
+</style>
