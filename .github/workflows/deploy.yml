@@ -3,6 +3,14 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main ]
+    paths:
+      - '**'
+      - '!**/*.md'
+      - '!**/*.mdx'
+      - '!docs/**'
+      # Published Markdown and copied assets still need deployment.
+      - 'src/**'
+      - 'public/**'
   workflow_dispatch:
 
 permissions:
