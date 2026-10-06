@@ -17,6 +17,7 @@ Never edit any content unless explicitly told so. In the case when permitted, yo
 ## Minor Quirks
 
 - Biome owns formatting and linting, except `*.astro` files, which are formatted by Prettier with `prettier-plugin-astro`.
+- Generated terminal replay HTML (`src/content/**/media/**/*.html`) is excluded from Biome. Its embedded player is minified output from `tcut`; maintain that code in the generator rather than editing published assets.
 - The private content publisher runs the public site's full `bun run ci` before committing generated content. Any failure already present on the site's `main` branch, even one unrelated to the content being published, blocks publication. Keep `main` green; at minimum, run `bun run fmt:astro:check` after editing `*.astro` files.
 
 ## UI
