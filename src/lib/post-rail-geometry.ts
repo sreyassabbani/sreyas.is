@@ -66,14 +66,16 @@ export function visiblePostLeft(post: Element, viewport: Clip): number {
     return left;
 }
 
+/** Only protrusions overlapping the viewport's middle third narrow the hover target. */
 export function measurePostRailHoverWidth(post: Element): number {
+    const viewportHeight = window.innerHeight;
     return postRailHoverWidth(
         post.getBoundingClientRect().left,
         visiblePostLeft(post, {
             left: 0,
             right: window.innerWidth,
-            top: 0,
-            bottom: window.innerHeight,
+            top: viewportHeight / 3,
+            bottom: (viewportHeight * 2) / 3,
         }),
     );
 }

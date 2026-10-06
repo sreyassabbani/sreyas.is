@@ -1,6 +1,6 @@
 My website @ [`sreyas.is`](https://sreyas.is). See source for various pages and posts in [`src/content`](src/content).
 
-I version control drafts in a separate, private repository (`sreyassabbani/content`). They are committed into [`src/content`](src/content) when their frontmatter has `publish: true`; [posts](src/content/posts) become eligible at 11:59 PM ET on their `pubDate`, while [pages](src/content/pages) become eligible immediately.
+I version control drafts in a separate, private repository (`sreyassabbani/content`). They are committed into [`src/content`](src/content) when their frontmatter has `publish: true`; [posts](src/content/posts) become eligible at 11:59 PM ET on their `pubDate`, while [pages](src/content/pages) become eligible immediately when pushed with `publish: true`.
 
 ## Local development
 
