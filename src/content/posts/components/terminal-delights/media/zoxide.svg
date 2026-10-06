@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" id="tcut-svg-bx7fnyn" width="664" height="192" viewBox="0 0 664 192" font-family="&quot;Geist Mono&quot;, &quot;Geist Mono Nerd Font Mono&quot;, &quot;GeistMono Nerd Font Mono&quot;, &quot;Geist Mono Nerd Font&quot;, &quot;GeistMono Nerd Font&quot;, &quot;Symbols Nerd Font Mono&quot;, &quot;Symbols Nerd Font&quot;, &quot;JetBrains Mono&quot;, &quot;JetBrainsMono Nerd Font Mono&quot;, &quot;Fira Code&quot;, Menlo, Consolas, &quot;DejaVu Sans Mono&quot;, monospace" font-size="16">
+
+<style>
+#tcut-svg-bx7fnyn text{white-space:pre;dominant-baseline:auto;font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0;font-kerning:none}
+</style>
+
+
+<rect x="0" y="0" width="663" height="192" rx="8" fill="#303446"/>
+
+<clipPath id="term-bx7fnyn"><rect x="24" y="24" width="614.4" height="144"/></clipPath>
+<g clip-path="url(#term-bx7fnyn)"><g transform="translate(24 24)"><g data-tcut-frame="" xml:space="preserve"><text y="18.72"><tspan x="0 9.6 19.2 28.8 38.4 48 57.6 67.2 76.8 86.4 96 105.6 115.2 124.8 134.4 144 153.6 163.2 172.8 182.4 192 201.6 211.2 220.8 230.4 240 249.6 259.2 268.8 278.4 288 297.6" fill="#737994">~/workflow/sreyas.is/src/layouts</tspan></text><text y="42.72"><tspan x="0 9.6 19.2 28.8 38.4 48 57.6 67.2" fill="#8caaee">sreysus </tspan><tspan x="76.8 86.4 96 105.6" fill="#f4b8e4">[λ] </tspan><tspan x="115.2 124.8 134.4" fill="#81c8be" font-weight="bold">cd </tspan><tspan x="144 153.6 163.2 172.8 182.4" fill="#a6d189">posts</tspan></text><text y="66.72"><tspan x="0 9.6 19.2 28.8 38.4 48 57.6 67.2 76.8 86.4 96 105.6 115.2 124.8 134.4 144 153.6" fill="#c6d0f5">direnv: unloading</tspan></text><text y="114.72"><tspan x="0 9.6 19.2 28.8 38.4 48 57.6 67.2 76.8 86.4 96 105.6 115.2 124.8 134.4 144 153.6 163.2 172.8 182.4 192 201.6 211.2 220.8" fill="#737994">~/workflow/content/posts</tspan></text><text y="138.72"><tspan x="0 9.6 19.2 28.8 38.4 48 57.6 67.2" fill="#8caaee">sreysus </tspan><tspan x="76.8 86.4 96" fill="#f4b8e4">[λ]</tspan></text><rect x="115.2" y="120" width="9.6" height="24" fill="#f2d5cf" opacity="0.85"/></g></g></g>
+
+</svg>

@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tcut recording</title>
+<style>
+:root { --terminal-background: #303446; --terminal-foreground: #c6d0f5; --terminal-controls-color: #b5bfe2; --terminal-focus-color: #8caaee; --terminal-selection-background: #626880; }
+html, body { margin: 0; background: transparent; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+#frame { width: 664px; flex: none; color: #c6d0f5; }
+#term { width: 664px; height: 192px; cursor: text; outline: none; }
+#term svg { display: block; width: 664px; height: 192px; max-width: none; user-select: text; }
+#controls { display: flex; gap: 12px; align-items: center; margin-top: 12px; font: 12px -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; color: #c6d0f5; }
+#controls button { background: transparent; color: inherit; border: 1px solid currentColor; border-radius: 6px; min-width: 54px; height: 26px; cursor: pointer; }
+#play svg { display: none; width: 18px; height: 18px; margin: auto; pointer-events: none; }
+#play[data-state="play"] .icon-play, #play[data-state="pause"] .icon-pause, #play[data-state="replay"] .icon-replay { display: block; }
+#controls input[type=range] { flex: 1; min-width: 0; accent-color: #f2d5cf; }
+#time { font-variant-numeric: tabular-nums; white-space: nowrap; }
+#controls label { display: flex; gap: 4px; align-items: center; }
+</style>
+</head>
+<body>
+<div id="frame">
+  <div id="term" tabindex="0" role="region" aria-label="Selectable terminal recording"><svg xmlns="http://www.w3.org/2000/svg" id="tcut-svg-bx7fnyn" width="664" height="192" viewBox="0 0 664 192" font-family="&quot;Geist Mono&quot;, &quot;Geist Mono Nerd Font Mono&quot;, &quot;GeistMono Nerd Font Mono&quot;, &quot;Geist Mono Nerd Font&quot;, &quot;GeistMono Nerd Font&quot;, &quot;Symbols Nerd Font Mono&quot;, &quot;Symbols Nerd Font&quot;, &quot;JetBrains Mono&quot;, &quot;JetBrainsMono Nerd Font Mono&quot;, &quot;Fira Code&quot;, Menlo, Consolas, &quot;DejaVu Sans Mono&quot;, monospace" font-size="16">
+
+<style>
+#tcut-svg-bx7fnyn text{white-space:pre;dominant-baseline:auto;font-variant-ligatures:none;font-feature-settings:"liga" 0,"calt" 0;font-kerning:none}
+</style>
+
+
+<rect x="0" y="0" width="663" height="192" rx="8" fill="#303446"/>
+
+<clipPath id="term-bx7fnyn"><rect x="24" y="24" width="614.4" height="144"/></clipPath>
+<g clip-path="url(#term-bx7fnyn)"><g transform="translate(24 24)"><g data-tcut-frame="" xml:space="preserve"><text y="18.72"><tspan x="0 9.6 19.2 28.8 38.4 48 57.6 67.2 76.8 86.4 96 105.6 115.2 124.8 134.4 144 153.6 163.2 172.8 182.4 192 201.6 211.2 220.8 230.4 240 249.6 259.2 268.8 278.4 288 297.6" fill="#737994">~/workflow/sreyas.is/src/layouts</tspan></text><text y="42.72"><tspan x="0 9.6 19.2 28.8 38.4 48 57.6 67.2" fill="#8caaee">sreysus </tspan><tspan x="76.8 86.4 96 105.6" fill="#f4b8e4">[λ] </tspan><tspan x="115.2 124.8 134.4" fill="#81c8be" font-weight="bold">cd </tspan><tspan x="144 153.6 163.2 172.8 182.4" fill="#a6d189">posts</tspan></text><text y="66.72"><tspan x="0 9.6 19.2 28.8 38.4 48 57.6 67.2 76.8 86.4 96 105.6 115.2 124.8 134.4 144 153.6" fill="#c6d0f5">direnv: unloading</tspan></text><text y="114.72"><tspan x="0 9.6 19.2 28.8 38.4 48 57.6 67.2 76.8 86.4 96 105.6 115.2 124.8 134.4 144 153.6 163.2 172.8 182.4 192 201.6 211.2 220.8" fill="#737994">~/workflow/content/posts</tspan></text><text y="138.72"><tspan x="0 9.6 19.2 28.8 38.4 48 57.6 67.2" fill="#8caaee">sreysus </tspan><tspan x="76.8 86.4 96" fill="#f4b8e4">[λ]</tspan></text><rect x="115.2" y="120" width="9.6" height="24" fill="#f2d5cf" opacity="0.85"/></g></g></g>
+
+</svg>
+</div>
+  <div id="controls">
+    <button id="play" type="button" data-state="replay" aria-label="Replay terminal recording" title="Replay" disabled>
+      <svg class="icon-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5.5a1 1 0 0 1 1.5-.86l10 6.5a1 1 0 0 1 0 1.72l-10 6.5A1 1 0 0 1 8 18.5z"/></svg>
+      <svg class="icon-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>
+      <svg class="icon-replay" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10a9 9 0 1 1 2.7 8.4M3 4v6h6"/></svg>
+    </button>
+    <input id="progress" aria-label="Recording position" type="range" min="0" max="1000" value="1000" disabled>
+    <span id="time">0:00 / 0:00</span>
+    <label><input id="loop" type="checkbox"> loop</label>
+  </div>
+</div>
+<script type="application/json" id="tcut-cast">{"encoding":"gzip-base64","payload":"H4sIAAAAAAAAE+2ZXW6jMBDHrzKafc0abIwxUcJF6j5QPlpUChE4m1ZV92J7hz3TypC0IYVW7VYV2zUvPBh7/h7/GM147jHdNrEu6gqXLuELzJv4JmtxeXaPurjJcOku8CZurrcbXOKqyRINt2uFrkK42793Raqv1gpDIhTCVVZcXum1QsYVQl6U5Vrht5ylfpIrhHoTJ4XuphLpK3QiXKDObjUuER8Wj1aJS8XJcyzEzOgEcEYCpjBa6XYTV702CIkAGhIGTBIJniQcuAQ/IAJEQBgEgkiQgnAIBVDXN59TnzCgjBMJ1OOEA+UcqO+ZMeGZsYCZMcnMWMiAuZQIYJQaO8wlEpjnEg6Mu8C4kcD8ToMwIlhgVDApgYVB56iDawIvCEOuMPrp7OrmOi/rndM22V3ckqJ12iZxyviu3up25XR7jFaO2X305AMh3u6DIwEyieMsUxgZq+22hUdDT+s999jx4fILmZkdnP3+dT42u3PusUWayAtjMRn7eOwMjiYLJqR0FUZlFjenPnkEtFtlDymXH0mpql47KFUdPNk5JDFCh2z7luV/muU+UIwQDXld6e+7A10XdZkazNNpTg3nM+E0HUIqveFjmbXM9szyeRJLT4C1xH4FYvtU4A2xdnQ9frxCLFIqQ4XRZjou77OOWVAOmyHnNjP+Upnxx3L+LGF+or2ext2UOPPBvR7wzk6AD2wmYnk/4b0v0sepb6exNzX9jLBvh9zbMtGCPg56fxs1gbue5t3cXs2Jdz0A3ibslveXeO9vX6eofyHMh3PKbVo9DPO2arXZ/Cf8BIeWjSmIZvcLnNw1jvd6qLS9nvf0u9T//g/81X3AG7uFR6ISkbq5rzBKiyarfixhW5V1nBbV5aRASvlsGH+lR5nUlc4q7bzscerJTwVWTaA6nRvse5OdWPah/ex3RkZVPeNFVYM4O3D9cBV8OH/4A7dyGbbVHwAA"}</script>
+<script type="module">var b=document.getElementById("tcut-cast");if(!b)throw Error("tcut player: missing replay data");var v=JSON.parse(b.textContent||"{}"),L=Uint8Array.from(atob(v.payload),(e)=>e.charCodeAt(0)),M=new Blob([L]).stream().pipeThrough(new DecompressionStream("gzip")),t=JSON.parse(await new Response(M).text()),l=document.getElementById("term"),g=l.querySelector("[data-tcut-frame]"),d=document.getElementById("play"),i=document.getElementById("progress"),R=document.getElementById("loop"),A=document.getElementById("time"),p=(e)=>`${Math.floor(e/60)}:${String(Math.floor(e%60)).padStart(2,"0")}`,f=t.frames.length-1,r=t.duration,s=!1,u=!1,E=!1,y=0,w=0;function B(e){let n=0,a=t.frames.length-1;while(n<=a){let o=n+a>>>1;if(t.frames[o].time<=e+0.000000001)n=o+1;else a=o-1}return Math.max(0,a)}function c(){let e=B(r);if(e!==f){let a=t.frames[e];if(a&&a.markup!==t.frames[f]?.markup)g.innerHTML=a.markup;f=e}i.value=String(Math.min(1000,Math.round(t.duration>0?r/t.duration*1000:0))),i.style.setProperty("--played",`${Number(i.value)/10}%`),A.textContent=`${p(r)} / ${p(t.duration)}`,i.setAttribute("aria-valuetext",`${p(r)} of ${p(t.duration)}`);let n=s?"Pause":r>=t.duration?"Replay":"Play";d.dataset.state=n.toLowerCase(),d.setAttribute("aria-label",`${n} terminal recording`),d.title=n}function m(){s=!1,cancelAnimationFrame(w),c()}function h(e){if(!s)return;if(r=Math.min(t.duration,r+(e-y)/1000),y=e,c(),r>=t.duration)if(R.checked)r=0;else{m();return}w=requestAnimationFrame(h)}function S(){if(s)return;if(r>=t.duration)r=0;s=!0,y=performance.now(),c(),w=requestAnimationFrame(h)}d.addEventListener("click",()=>{if(u=!0,s)m();else S()});i.addEventListener("input",()=>{u=!0;let e=Number(i.value)/1000*t.duration;m(),r=e,c()});l.addEventListener("pointerdown",()=>{u=!0,m(),l.focus({preventScroll:!0})});l.addEventListener("keydown",(e)=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="a"){u=!0,e.preventDefault(),m();let n=document.createRange();n.selectNodeContents(g);let a=document.getSelection();a?.removeAllRanges(),a?.addRange(n)}});window.addEventListener("message",(e)=>{if(e.source!==window.parent)return;if(e.data?.type==="tcut:ready"){window.parent.postMessage({type:"tcut:ready"},"*");return}if(e.data?.type!=="tcut:play-once")return;if(E||u||matchMedia("(prefers-reduced-motion: reduce)").matches)return;E=!0,S()});l.addEventListener("copy",(e)=>{let n=document.getSelection();if(!n?.rangeCount||!e.clipboardData)return;let a=n.getRangeAt(0),o=document.createRange();if(o.selectNodeContents(g),a.compareBoundaryPoints(Range.START_TO_START,o)===0&&a.compareBoundaryPoints(Range.END_TO_END,o)===0)e.clipboardData.setData("text/plain",t.frames[f]?.text??""),e.preventDefault()});c();d.disabled=!1;i.disabled=!1;if(window.parent!==window)window.parent.postMessage({type:"tcut:ready"},"*");
+</script>
+</body>
+</html>

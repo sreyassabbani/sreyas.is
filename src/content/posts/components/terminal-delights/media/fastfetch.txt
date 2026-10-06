@@ -1,0 +1,30 @@
+
+sreysus [λ] fastfetch
+                     ..'          sreysus@sreyas-air
+                 ,xNMM.           ------------------
+               .OMMMMo            OS: macOS  27.0 (26A428) arm64
+               lMM"               Host: MacBook Air (13-inch, M4, 2025)
+     .;loddo:.  .olloddol;.       Kernel: Darwin 27.0.0
+   cKMMMMMMMMMMNWMMMMMMMMMM0:     Uptime: 10 days, 1 hour, 11 mins
+ .KMMMMMMMMMMMMMMMMMMMMMMMWd.     Packages: 433 (nix-system), 3 (nix-user), 56 (nix-default), 115 (brew), 25 (brew-cask)
+ XMMMMMMMMMMMMMMMMMMMMMMMX.       Shell: nushell 0.109.1
+;MMMMMMMMMMMMMMMMMMMMMMMM:        Display (Color LCD): 3420x2224 @ 2x in 14", 60 Hz [Built-in]
+:MMMMMMMMMMMMMMMMMMMMMMMM:        WM: Quartz Compositor 462.0.8.402
+.MMMMMMMMMMMMMMMMMMMMMMMMX.       WM Theme: Multicolor (Dark)
+ kMMMMMMMMMMMMMMMMMMMMMMMMWd.     Theme: Liquid Glass
+ 'XMMMMMMMMMMMMMMMMMMMMMMMMMMk    Font: .AppleSystemUIFont [System], Helvetica [User]
+  'XMMMMMMMMMMMMMMMMMMMMMMMMK.    Cursor: Fill - Black, Outline - White (32px)
+    kMMMMMMMMMMMMMMMMMMMMMMd      Terminal: tcut
+     ;KMMMMMMMWXXWMMMMMMMk.       CPU: Apple M4 (10) @ 4.46 GHz
+       "cooc*"    "*coo'"         GPU: Apple M4 (10) @ 1.47 GHz [Integrated]
+                                  Memory: 15.80 GiB / 24.00 GiB (66%)
+                                  Swap: 972.25 MiB / 2.00 GiB (47%)
+                                  Disk (/): 432.20 GiB / 460.43 GiB (94%) - apfs [Read-only]
+                                  Local IP (en0): 10.0.0.231/24
+                                  Battery (bq40z651): 99% (14 hours, 10 mins remaining) [Discharging]
+                                  Locale: C.UTF-8
+
+
+
+
+sreysus [λ]

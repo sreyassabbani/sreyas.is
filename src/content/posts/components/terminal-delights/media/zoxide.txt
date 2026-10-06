@@ -1,0 +1,6 @@
+~/workflow/sreyas.is/src/layouts
+sreysus [λ] cd posts
+direnv: unloading
+
+~/workflow/content/posts
+sreysus [λ]
