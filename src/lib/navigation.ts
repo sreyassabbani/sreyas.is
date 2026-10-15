@@ -17,8 +17,5 @@ export function createNavigationGroups(
                 ...contentPageItems,
             ],
         },
-        {
-            items: [{ href: "/about", label: "About" }],
-        },
     ];
 }

@@ -40,6 +40,9 @@ function rehypeKatexWithPostMacros() {
 
 export default defineConfig({
     site: "https://sreyassabbani.github.io",
+    redirects: {
+        "/about": "/",
+    },
     integrations: [mdx(), react(), sitemap()],
     markdown: {
         remarkPlugins: [remarkMath],
