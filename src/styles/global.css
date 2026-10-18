@@ -30,6 +30,12 @@
     --color-accent-foreground: var(--accent-foreground);
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
+    /* An opaque red wash, for controls that sit on the header rule. */
+    --color-destructive-tint: color-mix(
+        in oklab,
+        var(--destructive) 15%,
+        var(--background)
+    );
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
