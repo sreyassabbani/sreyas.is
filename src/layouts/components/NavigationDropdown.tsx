@@ -1,5 +1,6 @@
 "use client";
 
+import { prefetch } from "astro:prefetch";
 import { Select as SelectPrimitive } from "@base-ui/react/select";
 import * as React from "react";
 
@@ -51,6 +52,15 @@ export function NavigationDropdown({
                 value: item.href,
             }))}
             value={value}
+            onOpenChange={(open) => {
+                // These navigate from script, so hover prefetching never sees
+                // them; warm every option once the menu opens instead.
+                if (open) {
+                    for (const item of navItems) {
+                        prefetch(item.href);
+                    }
+                }
+            }}
             onValueChange={(nextHref) => {
                 setValue(nextHref);
 

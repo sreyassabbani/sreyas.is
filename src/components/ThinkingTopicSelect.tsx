@@ -1,5 +1,6 @@
 "use client";
 
+import { prefetch } from "astro:prefetch";
 import * as React from "react";
 import { Chip } from "@/components/ui/chip";
 import {
@@ -35,7 +36,19 @@ export function ThinkingTopicSelect({ pathname, topics }: Props) {
     const [open, setOpen] = React.useState(false);
 
     return (
-        <Popover open={open} onOpenChange={setOpen}>
+        <Popover
+            open={open}
+            onOpenChange={(nextOpen) => {
+                setOpen(nextOpen);
+
+                // Subjects navigate from script; warm them when the list opens.
+                if (nextOpen) {
+                    for (const topic of topics) {
+                        prefetch(topic.href);
+                    }
+                }
+            }}
+        >
             <PopoverTrigger
                 aria-label="Choose a subject"
                 render={<Chip className="max-w-44 sm:max-w-56" />}

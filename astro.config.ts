@@ -43,6 +43,12 @@ export default defineConfig({
     redirects: {
         "/about": "/",
     },
+    // Fetch a page when a link is hovered, so the view transition runs from
+    // cache instead of waiting on the network.
+    prefetch: {
+        prefetchAll: true,
+        defaultStrategy: "hover",
+    },
     integrations: [mdx(), react(), sitemap()],
     markdown: {
         remarkPlugins: [remarkMath],

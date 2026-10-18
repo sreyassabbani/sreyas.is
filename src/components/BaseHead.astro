@@ -19,6 +19,7 @@ interface Props {
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
 const { title, description, image = FallbackImage } = Astro.props;
+import literataLatin400 from "@fontsource/literata/files/literata-latin-400-normal.woff2?url";
 ---
 
 <!-- Global Metadata -->
@@ -36,19 +37,13 @@ const { title, description, image = FallbackImage } = Astro.props;
 />
 <meta name="generator" content={Astro.generator} />
 
-<!-- Font preloads -->
+<!-- Body text is Literata on every page; fetch it alongside the stylesheet
+     instead of after it, so text doesn't reflow when the font arrives. -->
 <link
     rel="preload"
-    href="/fonts/atkinson-regular.woff"
+    href={literataLatin400}
     as="font"
-    type="font/woff"
-    crossorigin
-/>
-<link
-    rel="preload"
-    href="/fonts/atkinson-bold.woff"
-    as="font"
-    type="font/woff"
+    type="font/woff2"
     crossorigin
 />
 

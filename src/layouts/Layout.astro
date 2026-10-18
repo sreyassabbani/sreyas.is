@@ -1,4 +1,6 @@
 ---
+import geistMonoLatin400 from "@fontsource/geist-mono/files/geist-mono-latin-400-normal.woff2?url";
+import geistMonoLatin700 from "@fontsource/geist-mono/files/geist-mono-latin-700-normal.woff2?url";
 import BaseHead from "../components/BaseHead.astro";
 import Navigation from "./components/Navigation.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
@@ -46,6 +48,21 @@ const layout = layouts[variant] ?? layouts.default;
 <html lang="en">
     <head>
         <BaseHead title={title} description={description} />
+        <!-- The header (brand + pickers) is set in Geist Mono. -->
+        <link
+            rel="preload"
+            href={geistMonoLatin400}
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
+        <link
+            rel="preload"
+            href={geistMonoLatin700}
+            as="font"
+            type="font/woff2"
+            crossorigin
+        />
     </head>
 
     <body class={layout.body}>
