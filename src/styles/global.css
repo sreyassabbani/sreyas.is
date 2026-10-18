@@ -13,6 +13,23 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Crossfade between pages; the header (`site-nav`) moves on its own. */
+@media (prefers-reduced-motion: no-preference) {
+    @view-transition {
+        navigation: auto;
+    }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 160ms;
+}
+
+::view-transition-group(site-nav) {
+    animation-duration: 220ms;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
