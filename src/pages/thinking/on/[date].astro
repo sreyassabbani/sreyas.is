@@ -2,8 +2,10 @@
 import { type CollectionEntry, getCollection, render } from "astro:content";
 import { formatThinkingDate, groupEntriesByDate } from "@/lib/thinking";
 import { SITE_TITLE } from "@/consts";
+import { ThinkingDateRangePicker } from "@/components/ThinkingDateRangePicker";
 import ThinkingEntryList from "@/components/ThinkingEntryList.astro";
 import Layout from "@/layouts/Layout.astro";
+import ThinkingClause from "@/layouts/components/ThinkingClause.astro";
 
 type RenderedShortEntry = {
     entry: CollectionEntry<"posts">;
@@ -18,7 +20,10 @@ export async function getStaticPaths() {
     }));
 }
 
-const { date, shortEntries } = Astro.props;
+const { date, dateSlug, shortEntries } = Astro.props;
+const dates = groupEntriesByDate(await getCollection("posts")).map(
+    (group) => group.dateSlug,
+);
 const dateGroups = [Astro.props];
 const renderedShortEntries: RenderedShortEntry[] = await Promise.all(
     shortEntries.map(async (entry) => ({
@@ -32,6 +37,14 @@ const renderedShortEntries: RenderedShortEntry[] = await Promise.all(
     title={`${SITE_TITLE} — Thinking on ${formatThinkingDate(date)}`}
     description={`Thinking from ${formatThinkingDate(date)}.`}
 >
+    <ThinkingClause slot="clause" relation="on">
+        <ThinkingDateRangePicker
+            dates={dates}
+            selected={dateSlug}
+            client:load
+        />
+    </ThinkingClause>
+
     <section class="mt-8 space-y-8">
         <h1 class="sr-only">Thinking on {formatThinkingDate(date)}</h1>
         <ThinkingEntryList

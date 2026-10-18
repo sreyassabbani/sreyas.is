@@ -44,7 +44,7 @@ export function ThinkingTopicSelect({ pathname, topics }: Props) {
             </PopoverTrigger>
 
             <PopoverContent
-                align="end"
+                align="start"
                 sideOffset={6}
                 className="w-[min(20rem,calc(100vw-2rem))] gap-0 p-0"
             >

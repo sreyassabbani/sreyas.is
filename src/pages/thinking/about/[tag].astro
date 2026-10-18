@@ -4,11 +4,15 @@ import {
     formatTag,
     getAllTags,
     getEntriesForTag,
+    getTagHref,
+    getThinkingTopics,
     groupEntriesByDate,
 } from "@/lib/thinking";
 import { SITE_TITLE } from "@/consts";
+import { ThinkingTopicSelect } from "@/components/ThinkingTopicSelect";
 import ThinkingEntryList from "@/components/ThinkingEntryList.astro";
 import Layout from "@/layouts/Layout.astro";
+import ThinkingClause from "@/layouts/components/ThinkingClause.astro";
 
 export async function getStaticPaths() {
     const entries = await getCollection("posts");
@@ -24,26 +28,29 @@ export async function getStaticPaths() {
 
 const { tag, entries } = Astro.props;
 const dateGroups = groupEntriesByDate(entries);
+const topicOptions = getThinkingTopics(await getCollection("posts")).map(
+    (topic) => ({
+        href: getTagHref(topic.tag),
+        label: formatTag(topic.tag),
+        count: topic.entries.length,
+    }),
+);
 ---
 
 <Layout
     title={`${SITE_TITLE} — Thinking about ${formatTag(tag)}`}
     description={`Posts and notes about ${formatTag(tag).toLowerCase()}.`}
 >
+    <ThinkingClause slot="clause" relation="about">
+        <ThinkingTopicSelect
+            pathname={Astro.url.pathname}
+            topics={topicOptions}
+            client:load
+        />
+    </ThinkingClause>
+
     <section class="mt-8 space-y-8">
-        <header class="space-y-4 border-b border-border pb-5">
-            <a
-                href="/thinking/about/"
-                class="inline-flex text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-foreground"
-            >
-                Change subject
-            </a>
-            <h1
-                class="font-heading text-2xl font-semibold tracking-tight text-foreground"
-            >
-                {formatTag(tag).toLowerCase()}
-            </h1>
-        </header>
+        <h1 class="sr-only">Thinking about {formatTag(tag).toLowerCase()}</h1>
         <ThinkingEntryList groups={dateGroups} />
     </section>
 </Layout>

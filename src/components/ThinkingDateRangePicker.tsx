@@ -1,34 +1,52 @@
 "use client";
 
-import { format } from "date-fns";
-import { ChevronDownIcon } from "lucide-react";
+import { format, max, subMonths } from "date-fns";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
 
-import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Chip } from "@/components/ui/chip";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-
-type DateOption = Readonly<{
-    dateSlug: string;
-    label: string;
-    count: number;
-}>;
+import {
+    getThinkingRangeHref,
+    parseDateSlug,
+    readThinkingRange,
+    type ThinkingRange,
+    thinkingRangeEvent,
+} from "@/lib/thinking-range";
 
 type Props = Readonly<{
-    dates: readonly DateOption[];
+    /** Days that have entries, as yyyy-MM-dd. */
+    dates: readonly string[];
+    /**
+     * The day a /thinking/on/<date>/ page shows. Without it the picker is on
+     * /thinking/on/ and filters that page's list in place.
+     */
+    selected?: string;
 }>;
-
-function parseDateSlug(dateSlug: string): Date {
-    return new Date(`${dateSlug}T12:00:00`);
-}
 
 function dateKey(date: Date): string {
     return format(date, "yyyy-MM-dd");
+}
+
+function toDateRange(range: ThinkingRange | null): DateRange | undefined {
+    return range
+        ? { from: parseDateSlug(range.from), to: parseDateSlug(range.to) }
+        : undefined;
+}
+
+function toThinkingRange(range: DateRange | undefined): ThinkingRange | null {
+    if (!range?.from) {
+        return null;
+    }
+
+    const from = dateKey(range.from);
+    const to = dateKey(range.to ?? range.from);
+    return from <= to ? { from, to } : { from: to, to: from };
 }
 
 function rangeLabel(range: DateRange | undefined): string {
@@ -36,27 +54,31 @@ function rangeLabel(range: DateRange | undefined): string {
         return "…";
     }
 
-    if (!range.to || range.from.getTime() === range.to.getTime()) {
-        return format(range.from, "MMM d");
+    if (!range.to || dateKey(range.from) === dateKey(range.to)) {
+        return format(range.from, "MMM d, yyyy");
     }
 
     const sameYear = range.from.getFullYear() === range.to.getFullYear();
     return `${format(range.from, sameYear ? "MMM d" : "MMM d, yyyy")}–${format(range.to, "MMM d, yyyy")}`;
 }
 
-export function ThinkingDateRangePicker({ dates }: Props) {
-    const [range, setRange] = React.useState<DateRange | undefined>();
-    const [twoMonths, setTwoMonths] = React.useState(false);
-    const parsedDates = React.useMemo(
-        () => dates.map((date) => parseDateSlug(date.dateSlug)),
-        [dates],
+export function ThinkingDateRangePicker({ dates, selected }: Props) {
+    const filtersInPlace = selected === undefined;
+    const [range, setRange] = React.useState<DateRange | undefined>(() =>
+        selected ? toDateRange({ from: selected, to: selected }) : undefined,
     );
-    const chronologicalDates = React.useMemo(
+    // The chip only shows a range once the picker closes: relabelling it while
+    // open would resize it (and can wrap the header), dragging the popover
+    // along with it. The list behind still filters on every click.
+    const [shownRange, setShownRange] = React.useState(range);
+    const [twoMonths, setTwoMonths] = React.useState(false);
+    const parsedDates = React.useMemo(() => dates.map(parseDateSlug), [dates]);
+    const latestDate = React.useMemo(
         () =>
-            [...parsedDates].sort(
-                (left, right) => left.getTime() - right.getTime(),
-            ),
-        [parsedDates],
+            dates.length > 0
+                ? parseDateSlug([...dates].sort().at(-1) ?? "")
+                : undefined,
+        [dates],
     );
 
     React.useEffect(() => {
@@ -68,86 +90,101 @@ export function ThinkingDateRangePicker({ dates }: Props) {
         return () => query.removeEventListener("change", sync);
     }, []);
 
-    const matchingDates = React.useMemo(() => {
-        if (!range?.from) {
-            return [];
+    // The server can't see the query string, so the in-place range is read
+    // once the picker is live.
+    React.useEffect(() => {
+        if (filtersInPlace) {
+            const initial = toDateRange(
+                readThinkingRange(window.location.search),
+            );
+            setRange(initial);
+            setShownRange(initial);
+        }
+    }, [filtersInPlace]);
+
+    const select = (next: DateRange | undefined): void => {
+        setRange(next);
+
+        const nextRange = toThinkingRange(next);
+
+        if (!filtersInPlace) {
+            if (next?.from && next.to) {
+                window.location.assign(getThinkingRangeHref(nextRange));
+            }
+            return;
         }
 
-        const start = dateKey(range.from);
-        const end = dateKey(range.to ?? range.from);
-        const lowerBound = start < end ? start : end;
-        const upperBound = start < end ? end : start;
-        return dates.filter((date) => {
-            return date.dateSlug >= lowerBound && date.dateSlug <= upperBound;
-        });
-    }, [dates, range]);
+        window.history.replaceState(
+            window.history.state,
+            "",
+            getThinkingRangeHref(nextRange),
+        );
+        document.dispatchEvent(
+            new CustomEvent<ThinkingRange | null>(thinkingRangeEvent, {
+                detail: nextRange,
+            }),
+        );
+    };
 
-    const earliestDate = chronologicalDates[0];
-    const latestDate = chronologicalDates.at(-1);
+    // Open with the range (or the latest entry) in view. It's fixed when the
+    // picker opens so the months don't shift while a range is being picked.
+    const [openMonth, setOpenMonth] = React.useState<Date | undefined>();
+    const endMonth = max([...(latestDate ? [latestDate] : []), new Date()]);
+
+    const toggle = (open: boolean): void => {
+        if (open) {
+            const anchor = range?.from ?? latestDate;
+            setOpenMonth(
+                anchor && twoMonths && !range?.from
+                    ? subMonths(anchor, 1)
+                    : anchor,
+            );
+            return;
+        }
+
+        setShownRange(range);
+
+        // A single click on a /thinking/on/<date>/ page starts a new range;
+        // closing the picker there goes to that day.
+        if (!filtersInPlace && range?.from && !range.to) {
+            window.location.assign(
+                getThinkingRangeHref(toThinkingRange(range)),
+            );
+        }
+    };
 
     return (
-        <Popover>
+        <Popover onOpenChange={toggle}>
             <PopoverTrigger
-                render={
-                    <Button
-                        variant="ghost"
-                        aria-label="Choose a date range"
-                        className="h-auto max-w-56 bg-transparent p-0 font-brand shadow-none hover:bg-transparent focus-visible:ring-0"
-                    />
-                }
+                aria-label="Choose a date range"
+                render={<Chip className="max-w-64" />}
             >
-                <span className="flex min-w-0 items-center rounded border border-muted-foreground/50 px-1.5 py-0.5 text-base font-normal text-muted-foreground transition-colors hover:border-primary hover:text-primary md:text-lg">
-                    <span className="truncate">{rangeLabel(range)}</span>
-                </span>
-                <ChevronDownIcon />
+                {rangeLabel(shownRange)}
             </PopoverTrigger>
 
             <PopoverContent
-                align="center"
+                align="start"
                 sideOffset={8}
                 className="w-auto gap-0 p-0"
             >
                 <Calendar
                     mode="range"
                     selected={range}
-                    onSelect={setRange}
+                    onSelect={select}
                     resetOnSelect
+                    // With two months side by side, padding days from the
+                    // neighbouring month would show (and shade) the same dates
+                    // twice.
+                    showOutsideDays={false}
                     numberOfMonths={twoMonths ? 2 : 1}
-                    defaultMonth={latestDate}
-                    startMonth={earliestDate}
-                    endMonth={latestDate}
+                    defaultMonth={openMonth}
+                    endMonth={endMonth}
                     modifiers={{ hasEntries: parsedDates }}
                     modifiersClassNames={{
                         hasEntries: "font-semibold text-primary",
                     }}
                     className="[--cell-size:--spacing(8)] sm:[--cell-size:--spacing(9)]"
                 />
-
-                {range?.from && (
-                    <div className="border-t border-border p-2">
-                        {matchingDates.length > 0 ? (
-                            <ul className="grid list-none gap-0.5 p-0">
-                                {matchingDates.slice(0, 6).map((date) => (
-                                    <li key={date.dateSlug}>
-                                        <a
-                                            href={`/thinking/on/${date.dateSlug}/`}
-                                            className="flex items-center justify-between gap-4 rounded-md px-2 py-1 text-sm text-foreground no-underline transition-colors hover:bg-secondary focus-visible:bg-secondary focus-visible:outline-none"
-                                        >
-                                            <span>{date.label}</span>
-                                            <span className="font-mono text-xs text-muted-foreground">
-                                                {date.count}
-                                            </span>
-                                        </a>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p className="px-2 py-1 text-sm text-muted-foreground">
-                                No entries in this range.
-                            </p>
-                        )}
-                    </div>
-                )}
             </PopoverContent>
         </Popover>
     );

@@ -37,6 +37,7 @@ const renderedShortEntryById = new Map(
             <section
                 class="grid gap-3 pb-7 last:border-0 sm:grid-cols-[8rem_1fr]"
                 aria-labelledby={`thinking-${group.dateSlug}`}
+                data-thinking-date={group.dateSlug}
             >
                 <h2
                     id={`thinking-${group.dateSlug}`}

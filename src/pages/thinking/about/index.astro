@@ -2,12 +2,18 @@
 import { getCollection } from "astro:content";
 import { SITE_TITLE } from "@/consts";
 import { ThinkingTopicSelect } from "@/components/ThinkingTopicSelect";
-import { formatTag, getTagHref, getThinkingTopics } from "@/lib/thinking";
+import {
+    formatTag,
+    getTagHref,
+    getThinkingHref,
+    getThinkingTopics,
+} from "@/lib/thinking";
 import Layout from "@/layouts/Layout.astro";
-import ThinkingLens from "@/layouts/components/ThinkingLens.astro";
+import ThinkingClause from "@/layouts/components/ThinkingClause.astro";
 
 const pathname = Astro.url.pathname;
-const topics = getThinkingTopics(await getCollection("posts")).map((topic) => ({
+const topics = getThinkingTopics(await getCollection("posts"));
+const topicOptions = topics.map((topic) => ({
     href: getTagHref(topic.tag),
     label: formatTag(topic.tag),
     count: topic.entries.length,
@@ -15,12 +21,47 @@ const topics = getThinkingTopics(await getCollection("posts")).map((topic) => ({
 ---
 
 <Layout
-    title={`${SITE_TITLE} — Thinking by topic`}
-    description="Thinking grouped by topic."
-    variant="lens"
-    showNavigation={false}
+    title={`${SITE_TITLE} — Thinking by subject`}
+    description="Thinking grouped by subject."
 >
-    <ThinkingLens pathname={pathname} relation="about">
-        <ThinkingTopicSelect pathname={pathname} topics={topics} client:load />
-    </ThinkingLens>
+    <ThinkingClause slot="clause" relation="about">
+        <ThinkingTopicSelect
+            pathname={pathname}
+            topics={topicOptions}
+            client:load
+        />
+    </ThinkingClause>
+
+    <section class="mt-8 space-y-8 sm:space-y-9">
+        <h1 class="sr-only">Thinking by subject</h1>
+        {
+            topics.map((topic) => (
+                <section
+                    class="grid gap-3 sm:grid-cols-[8rem_1fr]"
+                    aria-labelledby={`subject-${topic.tag}`}
+                >
+                    <h2
+                        id={`subject-${topic.tag}`}
+                        class="translate-y-1 font-mono text-xs font-normal text-primary"
+                    >
+                        <a href={getTagHref(topic.tag)}>
+                            {formatTag(topic.tag).toLowerCase()}
+                        </a>
+                    </h2>
+                    <ul class="m-0 list-none space-y-2 p-0">
+                        {topic.entries.map((entry) => (
+                            <li class="font-heading text-md font-semibold text-foreground">
+                                <a
+                                    href={getThinkingHref(entry)}
+                                    class="text-link"
+                                >
+                                    {entry.data.title}
+                                </a>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            ))
+        }
+    </section>
 </Layout>

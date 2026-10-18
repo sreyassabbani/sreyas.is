@@ -1,26 +1,63 @@
 ---
 import { getCollection } from "astro:content";
-import { formatThinkingDate, groupEntriesByDate } from "@/lib/thinking";
+import { groupEntriesByDate } from "@/lib/thinking";
 import { SITE_TITLE } from "@/consts";
 import { ThinkingDateRangePicker } from "@/components/ThinkingDateRangePicker";
+import ThinkingEntryList from "@/components/ThinkingEntryList.astro";
 import Layout from "@/layouts/Layout.astro";
-import ThinkingLens from "@/layouts/components/ThinkingLens.astro";
+import ThinkingClause from "@/layouts/components/ThinkingClause.astro";
 
 const dateGroups = groupEntriesByDate(await getCollection("posts"));
-const dates = dateGroups.map((group) => ({
-    dateSlug: group.dateSlug,
-    label: formatThinkingDate(group.date),
-    count: group.entries.length,
-}));
+const dates = dateGroups.map((group) => group.dateSlug);
 ---
 
 <Layout
     title={`${SITE_TITLE} — Thinking by date`}
     description="Thinking grouped by date."
-    variant="lens"
-    showNavigation={false}
 >
-    <ThinkingLens pathname={Astro.url.pathname} relation="on">
+    <ThinkingClause slot="clause" relation="on">
         <ThinkingDateRangePicker dates={dates} client:load />
-    </ThinkingLens>
+    </ThinkingClause>
+
+    <section class="mt-8 space-y-8">
+        <h1 class="sr-only">Thinking by date</h1>
+        <p data-thinking-empty hidden class="text-sm text-muted-foreground"></p>
+        <ThinkingEntryList groups={dateGroups} />
+    </section>
 </Layout>
+
+<script>
+    import {
+        describeEmptyThinkingRange,
+        isInThinkingRange,
+        readThinkingRange,
+        type ThinkingRange,
+        thinkingRangeEvent,
+    } from "@/lib/thinking-range";
+
+    const sections = Array.from(
+        document.querySelectorAll<HTMLElement>("[data-thinking-date]"),
+    );
+    const empty = document.querySelector<HTMLElement>("[data-thinking-empty]");
+
+    function apply(range: ThinkingRange | null): void {
+        let shown = 0;
+
+        for (const section of sections) {
+            const dateSlug = section.dataset.thinkingDate ?? "";
+            const visible = !range || isInThinkingRange(dateSlug, range);
+            section.hidden = !visible;
+            shown += visible ? 1 : 0;
+        }
+
+        if (empty) {
+            empty.hidden = !range || shown > 0;
+            empty.textContent = range ? describeEmptyThinkingRange(range) : "";
+        }
+    }
+
+    apply(readThinkingRange(window.location.search));
+    document.addEventListener(thinkingRangeEvent, (event) => {
+        apply((event as CustomEvent<ThinkingRange | null>).detail);
+    });
+</script>
