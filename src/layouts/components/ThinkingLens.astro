@@ -24,7 +24,7 @@ const navigationGroups = createNavigationGroups(contentPageItems);
     <NavigationDropdown
         pathname={pathname}
         groups={navigationGroups}
-        client:only="react"
+        client:load
     />
     <span
         class="font-brand text-base font-normal leading-none text-muted-foreground md:text-lg"

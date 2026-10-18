@@ -21,6 +21,6 @@ const dates = dateGroups.map((group) => ({
     showNavigation={false}
 >
     <ThinkingLens pathname={Astro.url.pathname} relation="on">
-        <ThinkingDateRangePicker dates={dates} client:only="react" />
+        <ThinkingDateRangePicker dates={dates} client:load />
     </ThinkingLens>
 </Layout>

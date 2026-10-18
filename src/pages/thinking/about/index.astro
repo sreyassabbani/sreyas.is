@@ -21,10 +21,6 @@ const topics = getThinkingTopics(await getCollection("posts")).map((topic) => ({
     showNavigation={false}
 >
     <ThinkingLens pathname={pathname} relation="about">
-        <ThinkingTopicSelect
-            pathname={pathname}
-            topics={topics}
-            client:only="react"
-        />
+        <ThinkingTopicSelect pathname={pathname} topics={topics} client:load />
     </ThinkingLens>
 </Layout>

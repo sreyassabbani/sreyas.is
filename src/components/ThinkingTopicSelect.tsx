@@ -1,8 +1,7 @@
 "use client";
 
-import { ChevronDownIcon } from "lucide-react";
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { Chip } from "@/components/ui/chip";
 import {
     Command,
     CommandEmpty,
@@ -38,20 +37,10 @@ export function ThinkingTopicSelect({ pathname, topics }: Props) {
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger
-                render={
-                    <Button
-                        variant="ghost"
-                        aria-label="Choose a subject"
-                        className="h-auto w-auto max-w-44 cursor-pointer bg-transparent p-0 font-brand shadow-none hover:bg-transparent focus-visible:ring-0 sm:max-w-56"
-                    />
-                }
+                aria-label="Choose a subject"
+                render={<Chip className="max-w-44 sm:max-w-56" />}
             >
-                <span className="flex min-w-0 items-center rounded border border-muted-foreground/50 px-1.5 py-0.5 text-base font-normal text-muted-foreground transition-colors hover:border-primary hover:text-primary md:text-lg">
-                    <span className="truncate">
-                        {currentTopic ? currentTopic.label.toLowerCase() : "…"}
-                    </span>
-                </span>
-                <ChevronDownIcon />
+                {currentTopic ? currentTopic.label.toLowerCase() : "..."}
             </PopoverTrigger>
 
             <PopoverContent
@@ -62,7 +51,7 @@ export function ThinkingTopicSelect({ pathname, topics }: Props) {
                 <Command>
                     <CommandInput
                         aria-label="Filter subjects"
-                        placeholder="Find a subject…"
+                        placeholder="Find a subject..."
                     />
                     <CommandList className="max-h-[min(20rem,var(--available-height))]">
                         <CommandEmpty>No subjects found.</CommandEmpty>

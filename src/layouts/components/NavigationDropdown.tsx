@@ -1,15 +1,15 @@
 "use client";
 
+import { Select as SelectPrimitive } from "@base-ui/react/select";
 import * as React from "react";
 
+import { Chip } from "@/components/ui/chip";
 import {
     Select,
     SelectContent,
     SelectGroup,
     SelectItem,
     SelectSeparator,
-    SelectTrigger,
-    SelectValue,
 } from "@/components/ui/select";
 import type { NavigationItem, NavigationItemGroup } from "@/lib/navigation";
 
@@ -64,17 +64,14 @@ export function NavigationDropdown({
                     <span className="select-none">sreyas</span>
                     <span className="text-primary select-none">.is</span>
                 </a>
-                <SelectTrigger
+                <SelectPrimitive.Trigger
                     aria-label="Choose page"
-                    className="ml-2 h-auto w-auto cursor-pointer border-0 bg-transparent p-0 shadow-none hover:bg-transparent focus-visible:ring-0 dark:bg-transparent dark:hover:bg-transparent md:ml-4"
+                    render={<Chip className="ml-2 md:ml-4" />}
                 >
-                    <span className="flex items-center rounded border border-muted-foreground/50 px-1.5 py-0.5 text-base font-normal text-muted-foreground transition-colors hover:border-primary hover:text-primary md:text-lg">
-                        {currentItem && currentItem.href !== "/"
-                            ? currentItem.label.toLowerCase()
-                            : "..."}
-                    </span>
-                    <SelectValue className="sr-only" />
-                </SelectTrigger>
+                    {currentItem && currentItem.href !== "/"
+                        ? currentItem.label.toLowerCase()
+                        : "..."}
+                </SelectPrimitive.Trigger>
             </div>
 
             <SelectContent
