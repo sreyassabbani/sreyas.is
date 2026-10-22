@@ -228,6 +228,15 @@
         text-decoration-color: var(--primary) !important;
     }
 
+    .content-prose .external-link-marker {
+        display: inline-block;
+        width: 0.65em;
+        height: 0.65em;
+        margin-inline-start: 0.18em;
+        color: var(--muted-foreground);
+        vertical-align: 0.1em;
+    }
+
     .content-prose :is(span, mark) > :is(strong, em) {
         color: inherit;
     }

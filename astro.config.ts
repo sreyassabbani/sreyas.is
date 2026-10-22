@@ -13,6 +13,7 @@ import type { Root } from "hast";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import type { VFile } from "vfile";
+import rehypeExternalLinks from "./src/lib/rehype-external-links";
 
 const jacobianCoordinateMacros = {
     "\\cx": "\\textcolor{#D55E00}{x}",
@@ -52,7 +53,7 @@ export default defineConfig({
     integrations: [mdx(), react(), sitemap()],
     markdown: {
         remarkPlugins: [remarkMath],
-        rehypePlugins: [rehypeKatexWithPostMacros],
+        rehypePlugins: [rehypeKatexWithPostMacros, rehypeExternalLinks],
         syntaxHighlight: "shiki",
         shikiConfig: {
             themes: {
