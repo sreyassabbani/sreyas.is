@@ -31,6 +31,8 @@
               nodejs_24
               bun
               nushell
+              harfbuzz
+              (python3.withPackages (ps: [ ps.fonttools ps.brotli ]))
             ];
 
             shellHook = ''
