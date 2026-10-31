@@ -1,10 +1,7 @@
-// A date range on /thinking/on/, kept in the URL as ?from=yyyy-MM-dd&to=yyyy-MM-dd
-// so a filtered view can be shared. The picker in the header announces changes
-// with `thinkingRangeEvent`; the page's list listens and filters in place.
+// A date range is kept in the URL as ?from=yyyy-MM-dd&to=yyyy-MM-dd.
 
 export type ThinkingRange = Readonly<{ from: string; to: string }>;
 
-export const thinkingRangeEvent = "thinking:range";
 export const thinkingOnRoot = "/thinking/on/";
 
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -28,7 +25,16 @@ export function readThinkingRange(search: string): ThinkingRange | null {
     const from = params.get("from");
     const to = params.get("to") ?? from;
 
-    if (!from || !to || !datePattern.test(from) || !datePattern.test(to)) {
+    const valid = (value: string) => {
+        if (!datePattern.test(value)) return false;
+        const date = parseDateSlug(value);
+        return (
+            !Number.isNaN(date.valueOf()) &&
+            `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}` ===
+                value
+        );
+    };
+    if (!from || !to || !valid(from) || !valid(to)) {
         return null;
     }
 

@@ -1,0 +1,77 @@
+<p
+    data-thinking-empty
+    hidden
+    aria-live="polite"
+    class="text-sm text-muted-foreground"
+>
+</p>
+
+<script>
+    import {
+        getThinkingFiltersHref,
+        readThinkingFilters,
+        thinkingFiltersEvent,
+    } from "@/lib/thinking-filters";
+    import {
+        describeEmptyThinkingRange,
+        isInThinkingRange,
+    } from "@/lib/thinking-range";
+
+    function applyThinkingRange() {
+        const empty = document.querySelector<HTMLElement>(
+            "[data-thinking-empty]",
+        );
+        if (!empty) return;
+        const filters = readThinkingFilters(
+            window.location.pathname,
+            window.location.search,
+        );
+        const range = filters.date ? filters.range : null;
+        let shown = 0;
+
+        for (const section of document.querySelectorAll<HTMLElement>(
+            "[data-thinking-date]",
+        )) {
+            const visible =
+                !range ||
+                isInThinkingRange(section.dataset.thinkingDate ?? "", range);
+            section.hidden = !visible;
+            if (visible) shown++;
+        }
+        for (const section of document.querySelectorAll<HTMLElement>(
+            "[data-thinking-subject]",
+        )) {
+            let matching = 0;
+            for (const entry of section.querySelectorAll<HTMLElement>(
+                "[data-thinking-entry-date]",
+            )) {
+                const visible =
+                    !range ||
+                    isInThinkingRange(
+                        entry.dataset.thinkingEntryDate ?? "",
+                        range,
+                    );
+                entry.hidden = !visible;
+                if (visible) matching++;
+            }
+            section.hidden = matching === 0;
+            shown += matching;
+        }
+        for (const link of document.querySelectorAll<HTMLAnchorElement>(
+            "[data-thinking-subject-link]",
+        )) {
+            link.href = getThinkingFiltersHref({
+                ...filters,
+                subject: true,
+                subjectPath: link.dataset.thinkingSubjectLink ?? null,
+            });
+        }
+        empty.hidden = !range || shown > 0;
+        empty.textContent = range ? describeEmptyThinkingRange(range) : "";
+    }
+
+    applyThinkingRange();
+    window.addEventListener(thinkingFiltersEvent, applyThinkingRange);
+    window.addEventListener("popstate", applyThinkingRange);
+    document.addEventListener("astro:page-load", applyThinkingRange);
+</script>
