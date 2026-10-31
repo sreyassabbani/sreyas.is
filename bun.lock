@@ -12,13 +12,9 @@
         "@astrojs/sitemap": "3.7.4",
         "@base-ui/react": "^1.4.1",
         "@daypicker/react": "~10.0.2",
-        "@fontsource/dela-gothic-one": "^5.2.7",
-        "@fontsource/eb-garamond": "^5.2.7",
         "@fontsource/geist-mono": "^5.2.8",
-        "@fontsource/inter": "^5.2.8",
         "@fontsource/iosevka": "^5.2.5",
         "@fontsource/literata": "^5.2.8",
-        "@fontsource/spectral": "^5.2.8",
         "@tailwindcss/typography": "^0.5.19",
         "@tailwindcss/vite": "4.2.2",
         "@types/react": "^19.2.7",
@@ -207,19 +203,11 @@
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.11", "", {}, "sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg=="],
 
-    "@fontsource/dela-gothic-one": ["@fontsource/dela-gothic-one@5.2.7", "", {}, "sha512-swkcFgr2HjPWbY7dGP/9H7zXePtwF6C5ASLriFSZ02nAh6zjUIudwz8TBWQu9mIXfbgWnvokZ0PjP2FWQGGIWQ=="],
-
-    "@fontsource/eb-garamond": ["@fontsource/eb-garamond@5.2.7", "", {}, "sha512-V42tTlHDbnDo0+lENnXKWMx63Llq6Gfl2l7ozkoeRQN60S0jm6hEgCLlOT/5YyKAN9QZ0e2ofpy0rGKlz9jBrw=="],
-
     "@fontsource/geist-mono": ["@fontsource/geist-mono@5.2.8", "", {}, "sha512-YqZUb3X42GjRaHkibUNyE8K4Rk9A6I9Ez81YpJYiuJN4ggmTW2ixoQpa9EWCPfXZtIsCQJTyrDoV9OJOZO/UcA=="],
-
-    "@fontsource/inter": ["@fontsource/inter@5.2.8", "", {}, "sha512-P6r5WnJoKiNVV+zvW2xM13gNdFhAEpQ9dQJHt3naLvfg+LkF2ldgSLiF4T41lf1SQCM9QmkqPTn4TH568IRagg=="],
 
     "@fontsource/iosevka": ["@fontsource/iosevka@5.2.5", "", {}, "sha512-Zv/UHJodDug1LcnWv2u2+GPp3oWP3U6Xp16cJOsqqZQNsCu8sA/ttT331N0NypxBZ+7c8szlSRlYDcy9liZ8pw=="],
 
     "@fontsource/literata": ["@fontsource/literata@5.2.8", "", {}, "sha512-Rj3eEQeu7+yBw9ZjXxcRiKDDrhbhpCyb0b79VJVCjDF1fdgJ8gDr9C1SRFLwfi+VaHEkhJDnRGm25fq1Yk+wNg=="],
-
-    "@fontsource/spectral": ["@fontsource/spectral@5.2.8", "", {}, "sha512-0CqZ8/z8A38BdeSz5t2NSd5tCO1R9P1k7SF2VpRLMbZTMSSR6+2Dk0ZBMfEQK/IrBLQS1HgHLMqpdTwRpnKpGQ=="],
 
     "@img/colour": ["@img/colour@1.0.0", "", {}, "sha512-A5P/LfWGFSl6nsckYtjw9da+19jB8hkJ6ACTGcDfEJ0aE+l2n2El7dsVM7UVHZQ9s2lmYMWlrS21YLy2IR1LUw=="],
 
