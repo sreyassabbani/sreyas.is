@@ -7,6 +7,7 @@ import {
     getTagHref,
     getThinkingHref,
     getThinkingTopics,
+    isLongEntry,
 } from "@/lib/thinking";
 import Layout from "@/layouts/Layout.astro";
 import ThinkingRangeFilter from "@/components/ThinkingRangeFilter.astro";
@@ -50,6 +51,9 @@ const topics = getThinkingTopics(await getCollection("posts"));
                                 <a
                                     href={getThinkingHref(entry)}
                                     class="text-link"
+                                    data-thinking-article={
+                                        isLongEntry(entry) ? "" : undefined
+                                    }
                                 >
                                     {entry.data.title}
                                 </a>
@@ -61,3 +65,7 @@ const topics = getThinkingTopics(await getCollection("posts"));
         }
     </section>
 </Layout>
+
+<script>
+    import "@/lib/thinking-origin-listener";
+</script>

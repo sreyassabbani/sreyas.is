@@ -85,12 +85,12 @@ function setup() {
 }
 
 describe("returning to Thinking", () => {
-    test("returns to the filtered history entry and leaves modified clicks alone", () => {
+    test("links to the filtered origin after section navigation", () => {
         const page = setup();
         const origin = page.mockWindow.location.href;
         rememberThinkingOrigin("https://example.com/thinking/jacobians/");
         page.mockWindow.location.href =
-            "https://example.com/thinking/jacobians/";
+            "https://example.com/thinking/jacobians/#section";
         page.mockDocument.referrer = origin;
         restoreThinkingBackLink(page.link);
 
@@ -100,8 +100,8 @@ describe("returning to Thinking", () => {
         );
         expect(page.click({ metaKey: true })).toBe(false);
         expect(page.getBackCalls()).toBe(0);
-        expect(page.click()).toBe(true);
-        expect(page.getBackCalls()).toBe(1);
+        expect(page.click()).toBe(false);
+        expect(page.getBackCalls()).toBe(0);
     });
 
     test("direct or unrelated visits retain the fallback", () => {

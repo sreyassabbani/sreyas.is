@@ -93,20 +93,6 @@ export function restoreThinkingBackLink(link: HTMLAnchorElement) {
 
         link.href = origin.href;
         link.textContent = thinkingBackLabel(origin);
-        link.addEventListener("click", (event) => {
-            if (
-                event.button !== 0 ||
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey ||
-                window.history.length <= 1
-            ) {
-                return;
-            }
-            event.preventDefault();
-            window.history.back();
-        });
     } catch {
         // Keep the default /thinking link for direct visits or blocked storage.
     }
