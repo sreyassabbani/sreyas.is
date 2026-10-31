@@ -34,7 +34,7 @@ with tempfile.TemporaryDirectory() as tmp:
         subset_ttf = Path(tmp) / f'{name}.ttf'
         subprocess.run([
             'hb-subset', str(ttf), f'--unicodes={ranges(chars).replace("U+", "").replace(" ", "")}',
-            '--layout-features=*', '--no-hinting', f'--output-file={subset_ttf}',
+            '--no-hinting', f'--output-file={subset_ttf}',
         ], check=True)
         font = TTFont(subset_ttf)
         font.flavor = 'woff2'
