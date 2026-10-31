@@ -2,6 +2,7 @@
 
 import {
     CalendarDaysIcon,
+    CheckIcon,
     FunnelIcon,
     type LucideIcon,
     TagsIcon,
@@ -9,11 +10,21 @@ import {
 } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { FluidList, useFluidListItem } from "@/components/ui/fluid-list";
+import {
+    pickerIndicatorClass,
+    pickerItemClass,
+} from "@/components/ui/picker-styles";
 import {
     Popover,
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import { useThinkingFilters } from "@/hooks/use-thinking-filters";
+import {
+    getThinkingFiltersHref,
+    type ThinkingFilters,
+} from "@/lib/thinking-filters";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -21,24 +32,21 @@ type Props = {
 };
 
 type FilterOption = Readonly<{
-    href: string;
+    key: "date" | "subject";
     label: string;
     icon: LucideIcon;
-    activePath: string;
 }>;
 
 const options: readonly FilterOption[] = [
     {
-        href: "/thinking/on/",
+        key: "date",
         label: "By date",
         icon: CalendarDaysIcon,
-        activePath: "/thinking/on",
     },
     {
-        href: "/thinking/about/",
+        key: "subject",
         label: "By subject",
         icon: TagsIcon,
-        activePath: "/thinking/about",
     },
 ];
 
@@ -60,13 +68,16 @@ const pillActiveClass = cn(
     "dark:has-[[data-slot=thinking-filter-clear]:focus-visible]:border-destructive/50 dark:has-[[data-slot=thinking-filter-clear]:focus-visible]:bg-destructive-tint",
 );
 
-export function ThinkingFilterControl({ pathname }: Props) {
+// Astro's renderer detection needs an element even when the control itself
+// renders nothing, so keep the stateful component behind this boundary.
+export function ThinkingFilterControl(props: Props) {
+    return <ThinkingFilterControlContent {...props} />;
+}
+
+function ThinkingFilterControlContent({ pathname }: Props) {
+    const filters = useThinkingFilters(pathname);
     const isThinking: boolean = pathname.startsWith("/thinking");
-    const isActive: boolean =
-        isThinking &&
-        options.some((option: FilterOption): boolean =>
-            pathname.startsWith(option.activePath),
-        );
+    const isActive = filters.subject || filters.date;
 
     if (!isThinking) {
         return null;
@@ -99,7 +110,7 @@ export function ThinkingFilterControl({ pathname }: Props) {
                     {isActive && (
                         <a
                             href="/thinking"
-                            aria-label="Clear thinking filter"
+                            aria-label="Clear all thinking filters"
                             data-slot="thinking-filter-clear"
                             className="flex h-8 w-8 shrink-0 items-center justify-center text-current no-underline outline-none transition-colors duration-200 hover:text-destructive focus-visible:text-destructive"
                         >
@@ -114,47 +125,60 @@ export function ThinkingFilterControl({ pathname }: Props) {
                 sideOffset={8}
                 className="w-40 gap-1 p-1"
             >
-                {options.map((option: FilterOption) => {
-                    const Icon: LucideIcon = option.icon;
-                    const optionActive: boolean = pathname.startsWith(
-                        option.activePath,
-                    );
-
-                    return (
-                        // The current filter's row clears it: hovering swaps its
-                        // label for the same X as the clear button.
-                        <a
-                            key={option.href}
-                            href={optionActive ? "/thinking" : option.href}
-                            aria-label={
-                                optionActive ? "Clear filter" : undefined
-                            }
-                            className={cn(
-                                "group/option relative flex items-center rounded-md px-2 py-1.5 text-sm text-foreground no-underline outline-none transition-colors duration-150 hover:bg-secondary focus-visible:bg-secondary",
-                                optionActive &&
-                                    "bg-primary text-primary-foreground hover:bg-destructive/15 focus-visible:bg-destructive/15",
-                            )}
-                        >
-                            <span
-                                className={cn(
-                                    "flex items-center gap-2",
-                                    optionActive &&
-                                        "transition-opacity duration-150 group-hover/option:opacity-0 group-focus-visible/option:opacity-0",
-                                )}
-                            >
-                                <Icon className="size-4" aria-hidden="true" />
-                                <span>{option.label}</span>
-                            </span>
-                            {optionActive && (
-                                <XIcon
-                                    className="absolute inset-0 m-auto size-4 text-destructive opacity-0 transition-opacity duration-150 group-hover/option:opacity-100 group-focus-visible/option:opacity-100"
-                                    aria-hidden="true"
-                                />
-                            )}
-                        </a>
-                    );
-                })}
+                <FluidList>
+                    {options.map((option) => (
+                        <FilterOptionLink
+                            key={option.key}
+                            option={option}
+                            filters={filters}
+                        />
+                    ))}
+                </FluidList>
             </PopoverContent>
         </Popover>
+    );
+}
+
+function FilterOptionLink({
+    option,
+    filters,
+}: {
+    option: FilterOption;
+    filters: ThinkingFilters;
+}) {
+    const item = useFluidListItem<HTMLAnchorElement>();
+    const Icon = option.icon;
+    const active = filters[option.key];
+    const next =
+        option.key === "subject"
+            ? { ...filters, subject: !active, subjectPath: null }
+            : {
+                  ...filters,
+                  date: !active,
+                  range: active ? null : filters.range,
+              };
+
+    return (
+        <a
+            ref={item.ref}
+            href={getThinkingFiltersHref(next)}
+            aria-label={`${active ? "Remove" : "Add"} ${option.key} filter`}
+            onFocus={item.activate}
+            className={cn(
+                pickerItemClass,
+                "text-popover-foreground no-underline",
+            )}
+        >
+            <span className="flex items-center gap-2">
+                <Icon className="size-4" aria-hidden="true" />
+                <span>{option.label}</span>
+            </span>
+            {active && (
+                <CheckIcon
+                    className={pickerIndicatorClass}
+                    aria-hidden="true"
+                />
+            )}
+        </a>
     );
 }

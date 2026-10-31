@@ -55,6 +55,7 @@ const renderedShortEntryById = new Map(
                                 <a
                                     href={getThinkingHref(entry)}
                                     class="text-link"
+                                    data-thinking-article
                                 >
                                     {entry.data.title}
                                 </a>
@@ -117,3 +118,7 @@ const renderedShortEntryById = new Map(
         ))
     }
 </div>
+
+<script>
+    import "@/lib/thinking-origin-listener";
+</script>

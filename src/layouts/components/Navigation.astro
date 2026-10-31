@@ -6,7 +6,15 @@ import LinkedIn from "../../components/social/LinkedIn.astro";
 import Email from "../../components/social/Email.astro";
 import { NavigationDropdown } from "./NavigationDropdown";
 import { ThinkingFilterControl } from "../../components/ThinkingFilterControl";
+import { ThinkingFilterClauses } from "../../components/ThinkingFilterClauses";
 import { createNavigationGroups, type NavigationItem } from "@/lib/navigation";
+import {
+    formatTag,
+    getDateSlug,
+    getTagHref,
+    getThinkingTopics,
+    groupEntriesByDate,
+} from "@/lib/thinking";
 
 const pathname = Astro.url.pathname;
 const isHome = pathname === "/";
@@ -17,6 +25,17 @@ const contentPageItems: NavigationItem[] = (await getCollection("pages"))
     }))
     .sort((left, right) => left.label.localeCompare(right.label));
 const navigationGroups = createNavigationGroups(contentPageItems);
+const isThinking = /^\/thinking(?:\/|$)/.test(pathname);
+const thinkingEntries = isThinking ? await getCollection("posts") : [];
+const dates = groupEntriesByDate(thinkingEntries).map(
+    (group) => group.dateSlug,
+);
+const topics = getThinkingTopics(thinkingEntries).map((topic) => ({
+    href: getTagHref(topic.tag),
+    label: formatTag(topic.tag),
+    count: topic.entries.length,
+    dates: topic.entries.map((entry) => getDateSlug(entry.data.pubDate)),
+}));
 
 const controlsClass =
     "absolute bottom-0 left-full z-10 flex shrink-0 -translate-x-1/2 translate-y-1/2 items-center gap-2";
@@ -26,19 +45,31 @@ const socialLinksClass = "flex items-center gap-1 md:gap-4 md:px-3";
 <nav
     style="view-transition-name: site-nav"
     class:list={[
-        "relative flex flex-col gap-3 border-b border-border py-3 text-sm text-foreground md:min-h-14 md:flex-row md:items-center md:justify-between md:gap-0 md:px-2 md:py-2",
+        "relative flex flex-col gap-3 border-b border-border py-3 text-sm text-foreground has-[[data-slot=thinking-clause]]:pb-6 md:min-h-14 md:flex-row md:items-center md:justify-between md:gap-0 md:px-2 md:py-2 md:has-[[data-slot=thinking-clause]]:pb-6",
         isHome ? "w-full" : "w-[calc(100%-5.5rem)]",
     ]}
 >
-    <div
-        class="flex min-w-0 flex-wrap items-center justify-start gap-x-2 gap-y-3 md:w-full md:gap-x-3"
-    >
-        <NavigationDropdown
-            pathname={pathname}
-            groups={navigationGroups}
-            client:load
-        />
-        <slot name="clause" />
+    <div class="@container/nav min-w-0 md:w-full">
+        <div
+            data-navigation-grid
+            class="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-3 md:gap-x-3 data-[filters-inline=true]:grid-cols-[auto_auto_minmax(0,1fr)]"
+        >
+            <NavigationDropdown
+                pathname={pathname}
+                groups={navigationGroups}
+                client:load
+            />
+            {
+                isThinking && (
+                    <ThinkingFilterClauses
+                        pathname={pathname}
+                        topics={topics}
+                        dates={dates}
+                        client:load
+                    />
+                )
+            }
+        </div>
     </div>
 
     <div class={controlsClass}>

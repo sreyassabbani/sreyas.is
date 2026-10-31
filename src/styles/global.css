@@ -56,6 +56,10 @@
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
+    --color-hover: var(--hover);
+    --color-active: var(--active);
+    --color-selected: var(--selected);
+    --shadow-popover: var(--popover-shadow);
     --color-chart-1: var(--chart-1);
     --color-chart-2: var(--chart-2);
     --color-chart-3: var(--chart-3);
@@ -107,7 +111,7 @@
     --foreground: oklch(0.398 0.038 259.64);
     --card: oklch(0.971 0.007 266.19);
     --card-foreground: oklch(0.398 0.038 259.64);
-    --popover: oklch(0.971 0.007 266.19);
+    --popover: oklch(0.989 0.004 266.19);
     --popover-foreground: oklch(0.398 0.038 259.64);
     --primary: oklch(0.551 0.165 259.61);
     --primary-foreground: oklch(0.971 0.007 266.19);
@@ -122,6 +126,14 @@
     --border: oklch(0.887 0.02 256.4);
     --input: oklch(0.887 0.02 256.4);
     --ring: oklch(0.551 0.165 259.61);
+    /* Fluid interactions share the site's ink and blue, including portals. */
+    --hover: color-mix(in oklab, var(--primary) 9%, transparent);
+    --active: color-mix(in oklab, var(--primary) 16%, transparent);
+    --selected: color-mix(in oklab, var(--primary) 20%, transparent);
+    --focus-ring: var(--ring);
+    --popover-shadow:
+        0 2px 4px oklch(0.25 0.035 260 / 5%),
+        0 8px 28px -6px oklch(0.25 0.035 260 / 15%);
     --radius: 0.625rem;
     --sidebar: oklch(0.985 0 0);
     --sidebar-foreground: oklch(0.145 0 0);
@@ -138,7 +150,7 @@
     --foreground: oklch(0.838 0.028 256.4);
     --card: oklch(0.188 0.016 261.27);
     --card-foreground: oklch(0.838 0.028 256.4);
-    --popover: oklch(0.188 0.016 261.27);
+    --popover: oklch(0.245 0.022 261.27);
     --popover-foreground: oklch(0.838 0.028 256.4);
     --primary: oklch(0.704 0.108 243.61);
     --primary-foreground: oklch(0.188 0.016 261.27);
@@ -153,6 +165,12 @@
     --border: oklch(0.252 0.026 261.16);
     --input: oklch(0.252 0.026 261.16);
     --ring: oklch(0.704 0.108 243.61);
+    --hover: color-mix(in oklab, var(--primary) 13%, transparent);
+    --active: color-mix(in oklab, var(--primary) 21%, transparent);
+    --selected: color-mix(in oklab, var(--primary) 26%, transparent);
+    --popover-shadow:
+        0 2px 4px oklch(0.08 0.015 260 / 20%),
+        0 10px 32px -6px oklch(0.08 0.015 260 / 40%);
     --chart-1: oklch(0.488 0.243 264.376);
     --chart-2: oklch(0.696 0.17 162.48);
     --chart-3: oklch(0.769 0.188 70.08);
@@ -166,6 +184,12 @@
     --sidebar-accent-foreground: oklch(0.985 0 0);
     --sidebar-border: oklch(1 0 0 / 10%);
     --sidebar-ring: oklch(0.556 0 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
 }
 
 /* Base typography */
@@ -221,6 +245,54 @@
 }
 
 @layer components {
+    /* Base UI measures the remaining scroll distance on the viewport. */
+    .scroll-fade-y {
+        --scroll-fade-size: 12px;
+        -webkit-mask-image: linear-gradient(
+            to bottom,
+            transparent,
+            black
+                min(
+                    var(--scroll-fade-size),
+                    var(--scroll-area-overflow-y-start, 0px)
+                ),
+            black
+                calc(
+                    100% -
+                    min(
+                        var(--scroll-fade-size),
+                        var(--scroll-area-overflow-y-end, 0px)
+                    )
+                ),
+            transparent
+        );
+        mask-image: linear-gradient(
+            to bottom,
+            transparent,
+            black
+                min(
+                    var(--scroll-fade-size),
+                    var(--scroll-area-overflow-y-start, 0px)
+                ),
+            black
+                calc(
+                    100% -
+                    min(
+                        var(--scroll-fade-size),
+                        var(--scroll-area-overflow-y-end, 0px)
+                    )
+                ),
+            transparent
+        );
+    }
+
+    @media (forced-colors: active) {
+        .scroll-fade-y {
+            -webkit-mask-image: none;
+            mask-image: none;
+        }
+    }
+
     .text-link {
         color: inherit;
         text-decoration-line: underline;

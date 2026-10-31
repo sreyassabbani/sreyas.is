@@ -1,59 +1,59 @@
 ---
 import { getCollection } from "astro:content";
 import { SITE_TITLE } from "@/consts";
-import { ThinkingTopicSelect } from "@/components/ThinkingTopicSelect";
 import {
     formatTag,
+    getDateSlug,
     getTagHref,
     getThinkingHref,
     getThinkingTopics,
+    isLongEntry,
 } from "@/lib/thinking";
 import Layout from "@/layouts/Layout.astro";
-import ThinkingClause from "@/layouts/components/ThinkingClause.astro";
+import ThinkingRangeFilter from "@/components/ThinkingRangeFilter.astro";
 
-const pathname = Astro.url.pathname;
 const topics = getThinkingTopics(await getCollection("posts"));
-const topicOptions = topics.map((topic) => ({
-    href: getTagHref(topic.tag),
-    label: formatTag(topic.tag),
-    count: topic.entries.length,
-}));
 ---
 
 <Layout
     title={`${SITE_TITLE} — Thinking by subject`}
     description="Thinking grouped by subject."
 >
-    <ThinkingClause slot="clause" relation="about">
-        <ThinkingTopicSelect
-            pathname={pathname}
-            topics={topicOptions}
-            client:load
-        />
-    </ThinkingClause>
-
     <section class="mt-8 space-y-8 sm:space-y-9">
         <h1 class="sr-only">Thinking by subject</h1>
+        <ThinkingRangeFilter />
         {
             topics.map((topic) => (
                 <section
                     class="grid gap-3 sm:grid-cols-[8rem_1fr]"
                     aria-labelledby={`subject-${topic.tag}`}
+                    data-thinking-subject
                 >
                     <h2
                         id={`subject-${topic.tag}`}
                         class="translate-y-1 font-mono text-xs font-normal text-primary"
                     >
-                        <a href={getTagHref(topic.tag)}>
+                        <a
+                            href={getTagHref(topic.tag)}
+                            data-thinking-subject-link={getTagHref(topic.tag)}
+                        >
                             {formatTag(topic.tag).toLowerCase()}
                         </a>
                     </h2>
                     <ul class="m-0 list-none space-y-2 p-0">
                         {topic.entries.map((entry) => (
-                            <li class="font-heading text-md font-semibold text-foreground">
+                            <li
+                                class="font-heading text-md font-semibold text-foreground"
+                                data-thinking-entry-date={getDateSlug(
+                                    entry.data.pubDate,
+                                )}
+                            >
                                 <a
                                     href={getThinkingHref(entry)}
                                     class="text-link"
+                                    data-thinking-article={
+                                        isLongEntry(entry) ? "" : undefined
+                                    }
                                 >
                                     {entry.data.title}
                                 </a>
@@ -65,3 +65,7 @@ const topicOptions = topics.map((topic) => ({
         }
     </section>
 </Layout>
+
+<script>
+    import "@/lib/thinking-origin-listener";
+</script>

@@ -69,20 +69,23 @@ export function NavigationDropdown({
                 }
             }}
         >
-            <div className="flex items-center font-brand text-[clamp(1.45rem,6vw,2.35rem)] font-semibold tracking-tight leading-none md:text-[clamp(1.8rem,8vw,2.35rem)]">
-                <a href="/" className="no-underline hover:text-foreground">
-                    <span className="select-none">sreyas</span>
-                    <span className="text-primary select-none">.is</span>
-                </a>
-                <SelectPrimitive.Trigger
-                    aria-label="Choose page"
-                    render={<Chip className="ml-2 md:ml-4" />}
-                >
-                    {currentItem && currentItem.href !== "/"
-                        ? currentItem.label.toLowerCase()
-                        : "..."}
-                </SelectPrimitive.Trigger>
-            </div>
+            <a
+                href="/"
+                data-navigation-logo
+                className="font-brand text-[clamp(1.45rem,6vw,2.35rem)] font-semibold tracking-tight leading-none no-underline hover:text-foreground md:text-[clamp(1.8rem,8vw,2.35rem)]"
+            >
+                <span className="select-none">sreyas</span>
+                <span className="text-primary select-none">.is</span>
+            </a>
+            <SelectPrimitive.Trigger
+                aria-label="Choose page"
+                data-navigation-picker
+                render={<Chip className="max-w-full justify-self-start" />}
+            >
+                {currentItem && currentItem.href !== "/"
+                    ? currentItem.label.toLowerCase()
+                    : undefined}
+            </SelectPrimitive.Trigger>
 
             <SelectContent
                 align="start"

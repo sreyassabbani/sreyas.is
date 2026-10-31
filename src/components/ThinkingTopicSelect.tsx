@@ -1,46 +1,38 @@
 "use client";
 
 import { prefetch } from "astro:prefetch";
-import * as React from "react";
 import { Chip } from "@/components/ui/chip";
 import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-    CommandShortcut,
-} from "@/components/ui/command";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
+    Combobox,
+    ComboboxContent,
+    ComboboxEmpty,
+    ComboboxItem,
+    ComboboxList,
+    ComboboxSearch,
+    ComboboxTrigger,
+} from "@/components/ui/combobox";
 
-type Topic = Readonly<{
+export type Topic = Readonly<{
     href: string;
     label: string;
     count: number;
 }>;
 
 type Props = Readonly<{
-    pathname: string;
+    value: string | null;
     topics: readonly Topic[];
+    onValueChange: (href: string) => void;
 }>;
 
-export function ThinkingTopicSelect({ pathname, topics }: Props) {
-    const currentTopic = topics.find(
-        (topic) => pathname === topic.href || pathname.startsWith(topic.href),
-    );
-    const [open, setOpen] = React.useState(false);
-
+export function ThinkingTopicSelect({ value, topics, onValueChange }: Props) {
+    const currentTopic = topics.find((topic) => value === topic.href);
     return (
-        <Popover
-            open={open}
+        <Combobox
+            items={topics}
+            value={currentTopic ?? null}
+            itemToStringLabel={(topic: Topic) => topic.label.toLowerCase()}
+            autoHighlight
             onOpenChange={(nextOpen) => {
-                setOpen(nextOpen);
-
                 // Subjects navigate from script; warm them when the list opens.
                 if (nextOpen) {
                     for (const topic of topics) {
@@ -48,56 +40,52 @@ export function ThinkingTopicSelect({ pathname, topics }: Props) {
                     }
                 }
             }}
+            onValueChange={(topic: Topic | null) => {
+                if (topic && topic.href !== value) {
+                    onValueChange(topic.href);
+                }
+            }}
         >
-            <PopoverTrigger
-                aria-label="Choose a subject"
-                render={<Chip className="max-w-44 sm:max-w-56" />}
+            <ComboboxTrigger
+                aria-label={
+                    currentTopic
+                        ? `Choose a subject, selected: ${currentTopic.label.toLowerCase()}`
+                        : "Choose a subject"
+                }
+                showIcon={false}
+                render={<Chip className="max-w-full" />}
             >
-                {currentTopic ? currentTopic.label.toLowerCase() : "..."}
-            </PopoverTrigger>
+                {currentTopic?.label.toLowerCase()}
+            </ComboboxTrigger>
 
-            <PopoverContent
+            <ComboboxContent
                 align="start"
                 sideOffset={6}
-                className="w-[min(20rem,calc(100vw-2rem))] gap-0 p-0"
+                className="w-[min(20rem,calc(100vw-2rem))] min-w-0"
             >
-                <Command>
-                    <CommandInput
-                        aria-label="Filter subjects"
-                        placeholder="Find a subject..."
-                    />
-                    <CommandList className="max-h-[min(20rem,var(--available-height))]">
-                        <CommandEmpty>No subjects found.</CommandEmpty>
-                        <CommandGroup>
-                            {topics.map((topic) => (
-                                <CommandItem
-                                    key={topic.href}
-                                    value={topic.href}
-                                    keywords={[topic.label]}
-                                    data-current={
-                                        topic.href === currentTopic?.href
-                                    }
-                                    className="min-w-0 data-[current=true]:text-primary"
-                                    onSelect={(nextHref) => {
-                                        setOpen(false);
-
-                                        if (nextHref !== pathname) {
-                                            window.location.assign(nextHref);
-                                        }
-                                    }}
-                                >
-                                    <span className="min-w-0 flex-1 truncate">
-                                        {topic.label.toLowerCase()}
-                                    </span>
-                                    <CommandShortcut className="w-[3ch] shrink-0 text-right font-brand text-[0.68rem] leading-none tracking-normal tabular-nums">
-                                        {topic.count}
-                                    </CommandShortcut>
-                                </CommandItem>
-                            ))}
-                        </CommandGroup>
-                    </CommandList>
-                </Command>
-            </PopoverContent>
-        </Popover>
+                <ComboboxSearch
+                    aria-label="Filter subjects"
+                    placeholder="Find a subject..."
+                />
+                <ComboboxEmpty>No subjects found.</ComboboxEmpty>
+                <ComboboxList>
+                    {(topic: Topic) => (
+                        <ComboboxItem
+                            key={topic.href}
+                            value={topic}
+                            trailing={
+                                <span className="font-brand text-[0.68rem] leading-none text-muted-foreground tabular-nums">
+                                    {topic.count}
+                                </span>
+                            }
+                        >
+                            <span className="min-w-0 flex-1 truncate">
+                                {topic.label.toLowerCase()}
+                            </span>
+                        </ComboboxItem>
+                    )}
+                </ComboboxList>
+            </ComboboxContent>
+        </Combobox>
     );
 }
