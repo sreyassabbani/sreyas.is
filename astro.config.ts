@@ -1,3 +1,4 @@
+import path from "node:path";
 import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
@@ -14,6 +15,9 @@ import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import type { VFile } from "vfile";
 import rehypeExternalLinks from "./src/lib/rehype-external-links";
+
+// An isolated build/check uses its own caches as well as its own .astro dir.
+const isolatedCache = process.env.SREYAS_ASTRO_ISOLATED_CACHE;
 
 const jacobianCoordinateMacros = {
     "\\cx": "\\textcolor{#D55E00}{x}",
@@ -40,6 +44,7 @@ function rehypeKatexWithPostMacros() {
 }
 
 export default defineConfig({
+    cacheDir: isolatedCache ? path.join(isolatedCache, "astro") : undefined,
     site: "https://sreyassabbani.github.io",
     redirects: {
         "/about": "/",
@@ -70,6 +75,9 @@ export default defineConfig({
         },
     },
     vite: {
+        ...(isolatedCache
+            ? { cacheDir: path.join(isolatedCache, "vite") }
+            : {}),
         plugins: [tailwindcss()],
         resolve: {
             dedupe: ["react", "react-dom"],
