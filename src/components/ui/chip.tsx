@@ -26,9 +26,16 @@ function Chip({
         >
             <span
                 data-slot="chip-label"
-                className="flex min-w-0 items-center rounded border border-muted-foreground/50 px-1.5 py-0.5 transition-colors group-hover/chip:border-primary group-hover/chip:text-primary group-focus-visible/chip:border-primary group-focus-visible/chip:text-primary group-focus-visible/chip:ring-2 group-focus-visible/chip:ring-ring/50 group-data-popup-open/chip:border-primary group-data-popup-open/chip:text-primary"
+                className="flex min-w-[calc(3ch+0.75rem+2px)] items-center overflow-hidden rounded border border-muted-foreground/50 px-1.5 py-0.5 transition-colors group-hover/chip:border-primary group-hover/chip:text-primary group-focus-visible/chip:border-primary group-focus-visible/chip:text-primary group-focus-visible/chip:ring-2 group-focus-visible/chip:ring-ring/50 group-data-popup-open/chip:border-primary group-data-popup-open/chip:text-primary"
             >
-                <span className="truncate">{children}</span>
+                <span
+                    className={cn(
+                        "truncate",
+                        children == null && "[font-variant-ligatures:none]",
+                    )}
+                >
+                    {children ?? "..."}
+                </span>
             </span>
             <ChevronDownIcon
                 aria-hidden="true"

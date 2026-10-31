@@ -1,8 +1,8 @@
 "use client";
 
-import { Command as CommandPrimitive } from "cmdk";
+import { Command as CommandPrimitive, useCommandState } from "cmdk";
 import { CheckIcon, SearchIcon } from "lucide-react";
-import type * as React from "react";
+import * as React from "react";
 import {
     Dialog,
     DialogContent,
@@ -10,6 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import { FluidList, useFluidListItem } from "@/components/ui/fluid-list";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { cn } from "@/lib/utils";
 
@@ -21,7 +22,7 @@ function Command({
         <CommandPrimitive
             data-slot="command"
             className={cn(
-                "flex size-full flex-col overflow-hidden rounded-xl! bg-popover p-1 text-popover-foreground",
+                "flex size-full flex-col overflow-hidden rounded-lg bg-popover p-1 text-popover-foreground",
                 className,
             )}
             {...props}
@@ -87,17 +88,23 @@ function CommandInput({
 
 function CommandList({
     className,
+    children,
     ...props
 }: React.ComponentProps<typeof CommandPrimitive.List>) {
+    const search = useCommandState((state) => state.search);
     return (
         <CommandPrimitive.List
             data-slot="command-list"
             className={cn(
-                "no-scrollbar max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto outline-none",
+                "max-h-72 scroll-py-1 overflow-x-hidden overflow-y-auto overscroll-contain outline-none [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]",
                 className,
             )}
             {...props}
-        />
+        >
+            <FluidList keepActiveOnLeave layoutKey={search}>
+                {children}
+            </FluidList>
+        </CommandPrimitive.List>
     );
 }
 
@@ -146,13 +153,27 @@ function CommandSeparator({
 function CommandItem({
     className,
     children,
+    ref,
     ...props
 }: React.ComponentProps<typeof CommandPrimitive.Item>) {
+    const item = useFluidListItem<HTMLDivElement>(ref);
+    const selectedValue = useCommandState((state) => state.value);
+    React.useEffect(() => {
+        if (
+            item.elementRef.current?.getAttribute("data-value") ===
+            selectedValue
+        ) {
+            item.activate();
+        }
+    }, [selectedValue, item.activate, item.elementRef]);
+
     return (
         <CommandPrimitive.Item
+            ref={item.ref}
             data-slot="command-item"
             className={cn(
-                "group/command-item relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none in-data-[slot=dialog-content]:rounded-lg! data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 data-[selected=true]:bg-muted data-[selected=true]:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[selected=true]:*:[svg]:text-foreground",
+                "group/command-item relative z-10 flex min-h-8 cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-hidden select-none in-data-[slot=dialog-content]:rounded-lg! data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50 data-[selected=true]:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[selected=true]:*:[svg]:text-foreground",
+                !item.fluid && "data-[selected=true]:bg-muted",
                 className,
             )}
             {...props}

@@ -1,13 +1,19 @@
 import { Combobox as ComboboxPrimitive } from "@base-ui/react";
-import { CheckIcon, ChevronDownIcon, XIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, SearchIcon, XIcon } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
+import { FluidList, useFluidListItem } from "@/components/ui/fluid-list";
 import {
     InputGroup,
     InputGroupAddon,
     InputGroupButton,
     InputGroupInput,
 } from "@/components/ui/input-group";
+import {
+    pickerItemClass,
+    pickerPopupClass,
+} from "@/components/ui/picker-styles";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
 const Combobox = ComboboxPrimitive.Root;
@@ -19,17 +25,44 @@ function ComboboxValue({ ...props }: ComboboxPrimitive.Value.Props) {
 function ComboboxTrigger({
     className,
     children,
+    showIcon = true,
     ...props
-}: ComboboxPrimitive.Trigger.Props) {
+}: ComboboxPrimitive.Trigger.Props & { showIcon?: boolean }) {
     return (
         <ComboboxPrimitive.Trigger
             data-slot="combobox-trigger"
             className={cn("[&_svg:not([class*='size-'])]:size-4", className)}
             {...props}
         >
-            {children}
-            <ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground" />
+            {showIcon ? (
+                <>
+                    {children}
+                    <ChevronDownIcon className="pointer-events-none size-4 text-muted-foreground" />
+                </>
+            ) : (
+                children
+            )}
         </ComboboxPrimitive.Trigger>
+    );
+}
+
+/** Search field for a combobox whose trigger is separate from its input. */
+function ComboboxSearch({
+    className,
+    ...props
+}: ComboboxPrimitive.Input.Props) {
+    return (
+        <InputGroup className="h-8! w-auto rounded-lg! border-input/30 bg-input/30 shadow-none!">
+            <InputGroupAddon>
+                <SearchIcon className="opacity-50" />
+            </InputGroupAddon>
+            <ComboboxPrimitive.Input
+                data-slot="combobox-search"
+                render={<InputGroupInput />}
+                className={className}
+                {...props}
+            />
+        </InputGroup>
     );
 }
 
@@ -108,7 +141,8 @@ function ComboboxContent({
                     data-slot="combobox-content"
                     data-chips={!!anchor}
                     className={cn(
-                        "group/combobox-content relative max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) min-w-[calc(var(--anchor-width)+--spacing(7))] origin-(--transform-origin) overflow-hidden rounded-lg bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10 duration-100 data-[chips=true]:min-w-(--anchor-width) data-[side=bottom]:slide-in-from-top-2 data-[side=inline-end]:slide-in-from-left-2 data-[side=inline-start]:slide-in-from-right-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+                        pickerPopupClass,
+                        "group/combobox-content relative max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) min-w-[calc(var(--anchor-width)+--spacing(7))] overflow-hidden data-[chips=true]:min-w-(--anchor-width) *:data-[slot=input-group]:m-1 *:data-[slot=input-group]:mb-0 *:data-[slot=input-group]:h-8 *:data-[slot=input-group]:border-input/30 *:data-[slot=input-group]:bg-input/30 *:data-[slot=input-group]:shadow-none",
                         className,
                     )}
                     {...props}
@@ -118,41 +152,87 @@ function ComboboxContent({
     );
 }
 
-function ComboboxList({ className, ...props }: ComboboxPrimitive.List.Props) {
+function ComboboxList({
+    className,
+    children,
+    ...props
+}: ComboboxPrimitive.List.Props) {
     return (
-        <ComboboxPrimitive.List
-            data-slot="combobox-list"
-            className={cn(
-                "no-scrollbar max-h-[min(calc(--spacing(72)---spacing(9)),calc(var(--available-height)---spacing(9)))] scroll-py-1 overflow-y-auto overscroll-contain p-1 data-empty:p-0",
-                className,
-            )}
-            {...props}
-        />
+        <ScrollArea
+            className="max-h-[min(calc(--spacing(72)---spacing(9)),calc(var(--available-height)---spacing(9)))]"
+            viewportClassName="scroll-fade-y h-auto max-h-[inherit] scroll-py-1 overscroll-contain overflow-x-hidden! [&>[data-slot=scroll-area-content]]:min-w-0!"
+        >
+            <ComboboxPrimitive.List
+                data-slot="combobox-list"
+                className={cn(
+                    "p-1 pr-3 outline-none data-empty:p-0",
+                    className,
+                )}
+                {...props}
+            >
+                <FluidList keepActiveOnLeave>
+                    {typeof children === "function" ? (
+                        <ComboboxPrimitive.Collection>
+                            {children}
+                        </ComboboxPrimitive.Collection>
+                    ) : (
+                        children
+                    )}
+                </FluidList>
+            </ComboboxPrimitive.List>
+        </ScrollArea>
     );
 }
 
 function ComboboxItem({
     className,
     children,
+    ref,
+    trailing,
     ...props
-}: ComboboxPrimitive.Item.Props) {
+}: ComboboxPrimitive.Item.Props & { trailing?: React.ReactNode }) {
+    const item = useFluidListItem<HTMLDivElement>(ref);
+
+    // Base UI keeps focus on the search input and updates the highlighted row
+    // through aria-activedescendant, so row focus alone cannot drive the fill.
+    React.useEffect(() => {
+        const element = item.elementRef.current;
+        if (!element) return;
+        const sync = () => {
+            if (element.hasAttribute("data-highlighted")) item.activate();
+        };
+        const observer = new MutationObserver(sync);
+        observer.observe(element, {
+            attributes: true,
+            attributeFilter: ["data-highlighted"],
+        });
+        sync();
+        return () => observer.disconnect();
+    }, [item.activate, item.elementRef]);
+
     return (
         <ComboboxPrimitive.Item
+            ref={item.ref}
             data-slot="combobox-item"
             className={cn(
-                "relative flex w-full cursor-default items-center gap-2 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground not-data-[variant=destructive]:data-highlighted:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+                pickerItemClass,
+                "group/combobox-item",
+                !item.fluid && "data-highlighted:bg-hover",
                 className,
             )}
             {...props}
         >
             {children}
-            <ComboboxPrimitive.ItemIndicator
-                render={
-                    <span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />
-                }
-            >
-                <CheckIcon className="pointer-events-none" />
-            </ComboboxPrimitive.ItemIndicator>
+            <span className="pointer-events-none absolute right-2 flex min-w-[3ch] items-center justify-end">
+                {trailing != null && (
+                    <span className="group-data-selected/combobox-item:hidden">
+                        {trailing}
+                    </span>
+                )}
+                <ComboboxPrimitive.ItemIndicator>
+                    <CheckIcon className="pointer-events-none" />
+                </ComboboxPrimitive.ItemIndicator>
+            </span>
         </ComboboxPrimitive.Item>
     );
 }
@@ -286,6 +366,7 @@ function useComboboxAnchor() {
 export {
     Combobox,
     ComboboxInput,
+    ComboboxSearch,
     ComboboxContent,
     ComboboxList,
     ComboboxItem,
