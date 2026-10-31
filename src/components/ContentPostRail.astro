@@ -1,6 +1,10 @@
 ---
 import type { TocGroup } from "@/lib/content-toc";
 import { topFallbackTocGroup } from "@/lib/content-toc";
+import {
+    pickerPopupSurfaceClass,
+    pickerRowClass,
+} from "@/components/ui/picker-styles";
 
 type Props = {
     groups: TocGroup[];
@@ -9,60 +13,66 @@ type Props = {
 
 const { groups, ariaLabel = "Post sections" } = Astro.props as Props;
 const railEntries = groups.length > 0 ? groups : [topFallbackTocGroup];
-
-const railLinkClass =
-    "block rounded-md px-1.5 py-0.5 text-xs leading-5 text-muted-foreground no-underline transition-colors duration-200 hover:bg-secondary/60 hover:text-foreground data-[active=true]:bg-secondary data-[active=true]:text-foreground";
-const railChildListClass =
-    "ml-2 mt-0 max-h-0 overflow-hidden border-l border-transparent pl-2 opacity-0 transition-all duration-300 ease-out group-data-[open=true]/rail:mt-1 group-data-[open=true]/rail:max-h-48 group-data-[open=true]/rail:border-border group-data-[open=true]/rail:opacity-100";
 ---
 
-<aside
-    class="group/tocrail pointer-events-none fixed inset-y-0 left-0 z-20 hidden w-56 xl:block"
-    data-post-rail
-    aria-label={ariaLabel}
->
+<aside class="post-rail" data-post-rail aria-label={ariaLabel}>
     <button
         type="button"
-        class="pointer-events-auto absolute inset-y-0 left-0 appearance-none border-0 bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
-        style="width: var(--post-rail-trigger-width, 28px)"
+        class="post-rail__trigger"
         data-rail-trigger
-        aria-label="Open post sections"
+        aria-label="Sections"
         aria-controls="post-rail-panel"
         aria-expanded="false"
     >
+        <span class="post-rail__mobile-label">Sections</span>
+        <span class="post-rail__marks" aria-hidden="true">
+            <span
+                class="post-rail__mark-indicator"
+                data-rail-mark-indicator
+                hidden></span>
+            {
+                railEntries.map((group) => (
+                    <span class="post-rail__mark" data-rail-marker={group.slug}>
+                        <span />
+                    </span>
+                ))
+            }
+        </span>
     </button>
     <div
         id="post-rail-panel"
-        class="pointer-events-none absolute left-0 top-1/2 max-h-[calc(100vh-2rem)] w-52 -translate-x-40 -translate-y-1/2 overflow-y-auto rounded-r-xl border-y border-r border-border bg-card/95 px-3 py-3 opacity-0 transition-all duration-300 ease-out group-data-[open=true]/tocrail:pointer-events-auto group-data-[open=true]/tocrail:translate-x-0 group-data-[open=true]/tocrail:opacity-100"
+        class={`post-rail__panel ${pickerPopupSurfaceClass}`}
         data-rail-panel
         inert
         aria-hidden="true"
     >
-        <nav>
-            <ul class="m-0 list-none p-0">
+        <nav class="post-rail__navigation" data-rail-nav aria-label={ariaLabel}>
+            <span
+                class="post-rail__selection rounded-md bg-active"
+                data-rail-selection
+                hidden></span>
+            <span
+                class="post-rail__hover rounded-md bg-hover"
+                data-rail-hover
+                hidden></span>
+            <ul class="post-rail__list">
                 {
                     railEntries.map((group) => (
-                        <li
-                            class="group/rail mt-1 first:mt-0"
-                            data-rail-group={group.slug}
-                            data-has-children={
-                                group.children.length > 0 ? "true" : "false"
-                            }
-                        >
+                        <li class="post-rail__group">
                             <a
-                                class={railLinkClass}
                                 href={`#${group.slug}`}
+                                class={`${pickerRowClass} pr-1.5`}
                                 data-rail-link={group.slug}
                             >
                                 {group.text}
                             </a>
                             {group.children.length > 0 && (
-                                <ul class={railChildListClass}>
+                                <ul class="post-rail__children">
                                     {group.children.map((child) => (
-                                        <li class="mt-0.5 first:mt-0">
+                                        <li>
                                             <a
-                                                class={railLinkClass}
                                                 href={`#${child.slug}`}
+                                                class={`${pickerRowClass} pr-1.5`}
                                                 data-rail-link={child.slug}
                                                 data-parent-slug={group.slug}
                                             >
@@ -81,284 +91,383 @@ const railChildListClass =
 </aside>
 
 <script>
-    import { measurePostRailHoverWidth } from "@/lib/post-rail-geometry";
+    import { createSlidingIndicator } from "@/lib/sliding-indicator";
+    import { spring } from "@/lib/springs";
 
     (() => {
         let cleanup = () => {};
 
         const initPostRail = () => {
             cleanup();
-
             const rail = document.querySelector("[data-post-rail]");
-            if (!(rail instanceof HTMLElement)) {
-                cleanup = () => {};
-                return;
-            }
+            if (!(rail instanceof HTMLElement)) return;
             const trigger = rail.querySelector("[data-rail-trigger]");
             const panel = rail.querySelector("[data-rail-panel]");
+            const nav = rail.querySelector("[data-rail-nav]");
+            const selectionElement = rail.querySelector(
+                "[data-rail-selection]",
+            );
+            const hoverElement = rail.querySelector("[data-rail-hover]");
+            const marks = rail.querySelector(".post-rail__marks");
+            const markIndicatorElement = rail.querySelector(
+                "[data-rail-mark-indicator]",
+            );
             if (
                 !(trigger instanceof HTMLButtonElement) ||
-                !(panel instanceof HTMLElement)
+                !(panel instanceof HTMLElement) ||
+                !(nav instanceof HTMLElement) ||
+                !(selectionElement instanceof HTMLElement) ||
+                !(hoverElement instanceof HTMLElement) ||
+                !(marks instanceof HTMLElement) ||
+                !(markIndicatorElement instanceof HTMLElement)
             ) {
                 return;
             }
-            const post =
-                document.querySelector("main article") ??
-                document.querySelector("main .content-prose");
+            const selection = createSlidingIndicator({
+                container: nav,
+                indicator: selectionElement,
+            });
+            const hover = createSlidingIndicator({
+                container: nav,
+                indicator: hoverElement,
+                transition: spring.fast,
+            });
+            const markers = Array.from(
+                rail.querySelectorAll<HTMLElement>("[data-rail-marker]"),
+            );
+            let markerPositions: number[] = [];
+            const measureMarkers = () => {
+                const top = marks.getBoundingClientRect().top;
+                markerPositions = markers.map((marker) => {
+                    const line = marker.firstElementChild;
+                    if (!(line instanceof HTMLElement)) return 0;
+                    const rect = line.getBoundingClientRect();
+                    return rect.top - top + rect.height / 2;
+                });
+            };
+            const markIndicator = createSlidingIndicator({
+                container: marks,
+                indicator: markIndicatorElement,
+                onUpdate: ({ top, height }) => {
+                    const spacing =
+                        markerPositions.length > 1
+                            ? Math.max(
+                                  2,
+                                  Math.abs(
+                                      markerPositions[1] - markerPositions[0],
+                                  ),
+                              )
+                            : 10;
+                    const center = top + height / 2;
+                    markers.forEach((marker, index) => {
+                        const distance =
+                            (markerPositions[index] - center) / (spacing * 1.2);
+                        const emphasis = Math.exp(-0.5 * distance * distance);
+                        marker.style.setProperty(
+                            "--mark-emphasis",
+                            emphasis.toFixed(3),
+                        );
+                    });
+                },
+            });
 
             const links = Array.from(
-                rail.querySelectorAll("[data-rail-link]"),
-            ).filter(
-                (link): link is HTMLAnchorElement =>
-                    link instanceof HTMLAnchorElement,
+                rail.querySelectorAll<HTMLAnchorElement>("[data-rail-link]"),
             );
-            const groups = Array.from(
-                rail.querySelectorAll("[data-rail-group]"),
-            ).filter(
-                (group): group is HTMLElement => group instanceof HTMLElement,
-            );
-            const observedHeadings = links
-                .map((link) => {
-                    const slug = link.dataset.railLink;
-                    if (!slug) return null;
-
-                    const element = document.getElementById(slug);
-                    if (!(element instanceof HTMLElement)) {
-                        return null;
-                    }
-
-                    return { slug, element };
-                })
-                .filter((heading) => heading !== null);
-
-            let activeSlug = observedHeadings[0]?.slug ?? "top";
-            let pinned = false;
-            let triggerWidth = 28;
-            let geometryTimer: number | undefined;
-            let geometryFrame: number | undefined;
-            let lastGeometryAt = 0;
-
-            const setRailOpen = (open: boolean) => {
-                rail.dataset.open = open ? "true" : "false";
-                trigger.setAttribute("aria-expanded", String(open));
-                trigger.setAttribute(
-                    "aria-label",
-                    open ? "Close post sections" : "Open post sections",
+            const headings = links
+                .map((link) => ({
+                    link,
+                    element: document.getElementById(
+                        link.dataset.railLink ?? "",
+                    ),
+                }))
+                .filter(
+                    (
+                        entry,
+                    ): entry is {
+                        link: HTMLAnchorElement;
+                        element: HTMLElement;
+                    } => entry.element instanceof HTMLElement,
                 );
+            const desktop = window.matchMedia("(min-width: 80rem)");
+            const canHover = window.matchMedia("(hover: hover)");
+            let pinned = false;
+            let frame = 0;
+            let activeLink: HTMLAnchorElement | null = null;
+            let hoveredLink: HTMLAnchorElement | null = null;
+            let activeMarker: HTMLElement | null = null;
+            let markerPreview = false;
+            let pointerFrame = 0;
+            let pointerY = 0;
+
+            const restoreMarker = () => {
+                markerPreview = false;
+                if (pointerFrame) {
+                    cancelAnimationFrame(pointerFrame);
+                    pointerFrame = 0;
+                }
+                markIndicator.move(activeMarker);
+            };
+            const previewMarker = (link: HTMLAnchorElement) => {
+                if (!desktop.matches) return;
+                const group = link.dataset.parentSlug ?? link.dataset.railLink;
+                const marker = markers.find(
+                    (item) => item.dataset.railMarker === group,
+                )?.firstElementChild;
+                if (!(marker instanceof HTMLElement)) return;
+                markerPreview = true;
+                markIndicator.move(marker);
+            };
+            const setHover = (link: HTMLAnchorElement | null) => {
+                hoveredLink = link;
+                hover.move(link === activeLink ? null : link);
+                if (link) previewMarker(link);
+            };
+
+            const setOpen = (open: boolean) => {
+                rail.dataset.open = String(open);
+                trigger.setAttribute("aria-expanded", String(open));
                 panel.inert = !open;
                 panel.setAttribute("aria-hidden", String(!open));
-            };
-
-            const setOpenGroup = (slug: string | null | undefined) => {
-                groups.forEach((group) => {
-                    group.dataset.open =
-                        slug &&
-                        group.dataset.railGroup === slug &&
-                        group.dataset.hasChildren === "true"
-                            ? "true"
-                            : "false";
-                });
-            };
-
-            const syncExpandedGroup = (slug: string) => {
-                const activeChildLink = rail.querySelector(
-                    `[data-parent-slug][data-rail-link="${slug}"]`,
-                );
-
-                if (activeChildLink instanceof HTMLElement) {
-                    setOpenGroup(activeChildLink.dataset.parentSlug);
-                    return;
+                if (open) {
+                    selection.remeasure();
+                    if (!markerPreview) markIndicator.remeasure();
+                } else {
+                    setHover(null);
                 }
-
-                setOpenGroup(null);
             };
 
-            const setActiveSlug = (slug: string) => {
-                activeSlug = slug;
-
-                links.forEach((link) => {
-                    link.dataset.active =
-                        link.dataset.railLink === slug ? "true" : "false";
-                });
-
-                syncExpandedGroup(slug);
-            };
-
-            const updateGeometry = () => {
-                if (!post || getComputedStyle(rail).display === "none") return;
-                triggerWidth = measurePostRailHoverWidth(post);
-                rail.style.setProperty(
-                    "--post-rail-trigger-width",
-                    `${triggerWidth}px`,
+            const updateActive = () => {
+                frame = 0;
+                let active = headings[0];
+                const line = window.innerHeight * 0.2;
+                for (const heading of headings) {
+                    if (heading.element.getBoundingClientRect().top <= line) {
+                        active = heading;
+                    }
+                }
+                const nextActiveLink = active?.link ?? links[0] ?? null;
+                if (nextActiveLink === activeLink) return;
+                const activeSlug = nextActiveLink?.dataset.railLink;
+                const activeGroup =
+                    nextActiveLink?.dataset.parentSlug ??
+                    activeSlug ??
+                    markers[0]?.dataset.railMarker;
+                activeLink = nextActiveLink;
+                selection.move(activeLink);
+                hover.move(hoveredLink === activeLink ? null : hoveredLink);
+                const marker = markers.find(
+                    (item) => item.dataset.railMarker === activeGroup,
                 );
-                lastGeometryAt = performance.now();
+                activeMarker =
+                    marker?.firstElementChild instanceof HTMLElement
+                        ? marker.firstElementChild
+                        : null;
+                if (!markerPreview) markIndicator.move(activeMarker);
+                for (const link of links) {
+                    const isActive = link.dataset.railLink === activeSlug;
+                    link.dataset.active = String(isActive);
+                    if (isActive) link.setAttribute("aria-current", "location");
+                    else link.removeAttribute("aria-current");
+                }
+                for (const marker of markers) {
+                    marker.dataset.active = String(
+                        marker.dataset.railMarker === activeGroup,
+                    );
+                }
             };
-
-            const scheduleGeometry = () => {
-                if (geometryTimer !== undefined) return;
-                geometryTimer = window.setTimeout(
-                    () => {
-                        geometryFrame = requestAnimationFrame(() => {
-                            geometryTimer = undefined;
-                            geometryFrame = undefined;
-                            updateGeometry();
-                        });
-                    },
-                    Math.max(0, 80 - (performance.now() - lastGeometryAt)),
-                );
+            const scheduleActive = () => {
+                if (!frame) frame = requestAnimationFrame(updateActive);
             };
-
-            const onRailEnter = (event: MouseEvent) => {
-                // Re-check before opening, even if layout changed since the last scroll/resize event.
-                updateGeometry();
+            const onEnter = () => {
+                if (desktop.matches && canHover.matches) setOpen(true);
+            };
+            const onLeave = () => {
                 if (
-                    rail.dataset.open === "true" ||
-                    event.clientX <= triggerWidth
+                    !(document.activeElement instanceof HTMLAnchorElement) ||
+                    !nav.contains(document.activeElement)
                 ) {
-                    setRailOpen(true);
+                    restoreMarker();
                 }
+                if (!pinned && !rail.contains(document.activeElement))
+                    setOpen(false);
             };
-            const onRailLeave = () => {
-                if (pinned || panel.contains(document.activeElement)) return;
-                setRailOpen(false);
-                syncExpandedGroup(activeSlug);
+            const onFocus = () => {
+                if (desktop.matches) setOpen(true);
             };
-            const onTriggerClick = () => {
-                pinned = rail.dataset.open !== "true";
-                setRailOpen(pinned);
-            };
-            const onRailFocus = (event: FocusEvent) => {
-                if (
-                    !(event.target instanceof HTMLElement) ||
-                    !panel.contains(event.target)
-                ) {
-                    return;
-                }
-                setRailOpen(true);
-                const group = event.target.closest("[data-rail-group]");
-                if (group instanceof HTMLElement) {
-                    setOpenGroup(group.dataset.railGroup);
-                }
-            };
-            const onRailBlur = (event: FocusEvent) => {
+            const onBlur = (event: FocusEvent) => {
                 if (
                     !pinned &&
-                    !rail.matches(":hover") &&
-                    !rail.contains(event.relatedTarget as Node | null)
+                    !rail.contains(event.relatedTarget as Node | null) &&
+                    !(
+                        desktop.matches &&
+                        canHover.matches &&
+                        rail.matches(":hover")
+                    )
                 ) {
-                    setRailOpen(false);
-                    syncExpandedGroup(activeSlug);
+                    setOpen(false);
+                }
+                if (
+                    !rail.contains(event.relatedTarget as Node | null) &&
+                    !(
+                        desktop.matches &&
+                        canHover.matches &&
+                        rail.matches(":hover")
+                    )
+                ) {
+                    restoreMarker();
                 }
             };
-            const onRailKeyDown = (event: KeyboardEvent) => {
-                if (event.key !== "Escape") return;
+            const onTriggerPointerMove = (event: PointerEvent) => {
+                if (
+                    !desktop.matches ||
+                    event.pointerType === "touch" ||
+                    !markerPositions.length
+                )
+                    return;
+                pointerY = event.clientY;
+                markerPreview = true;
+                if (pointerFrame) return;
+                pointerFrame = requestAnimationFrame(() => {
+                    pointerFrame = 0;
+                    const rect = marks.getBoundingClientRect();
+                    const min = markerPositions[0];
+                    const max = markerPositions[markerPositions.length - 1];
+                    const center = Math.min(
+                        max,
+                        Math.max(min, pointerY - rect.top),
+                    );
+                    markIndicator.moveToRect({
+                        left: 0,
+                        top: center - 1,
+                        width: 24,
+                        height: 2,
+                    });
+                });
+            };
+            const onTrigger = () => {
+                pinned = !pinned;
+                setOpen(pinned);
+            };
+            const onKey = (event: KeyboardEvent) => {
+                if (event.key !== "Escape" || rail.dataset.open !== "true")
+                    return;
                 event.preventDefault();
                 pinned = false;
                 if (panel.contains(document.activeElement)) trigger.focus();
-                setRailOpen(false);
-                syncExpandedGroup(activeSlug);
+                setOpen(false);
+                restoreMarker();
             };
-
-            const removeGroupListeners = groups.map((group) => {
-                const slug = group.dataset.railGroup;
-                if (!slug || group.dataset.hasChildren !== "true") {
-                    return () => {};
+            const onOutside = (event: PointerEvent) => {
+                if (
+                    event.target instanceof Node &&
+                    !rail.contains(event.target)
+                ) {
+                    pinned = false;
+                    setOpen(false);
+                    restoreMarker();
                 }
+            };
+            const onPanelClick = (event: MouseEvent) => {
+                if (
+                    !desktop.matches &&
+                    event.target instanceof Element &&
+                    event.target.closest("a[data-rail-link]")
+                ) {
+                    pinned = false;
+                    trigger.focus({ preventScroll: true });
+                    setOpen(false);
+                    restoreMarker();
+                }
+            };
+            const onPanelHover = (event: MouseEvent | FocusEvent) => {
+                if (!(event.target instanceof Element)) return;
+                const link =
+                    event.target.closest<HTMLAnchorElement>(
+                        "a[data-rail-link]",
+                    );
+                if (link && nav.contains(link)) setHover(link);
+            };
+            const onPanelLeave = () => {
+                const focused = document.activeElement;
+                setHover(
+                    focused instanceof HTMLAnchorElement &&
+                        nav.contains(focused)
+                        ? focused
+                        : null,
+                );
+                if (
+                    !(focused instanceof HTMLAnchorElement) ||
+                    !nav.contains(focused)
+                ) {
+                    restoreMarker();
+                }
+            };
+            const onPanelBlur = (event: FocusEvent) => {
+                if (
+                    !nav.contains(event.relatedTarget as Node | null) &&
+                    !panel.matches(":hover")
+                ) {
+                    setHover(null);
+                    restoreMarker();
+                }
+            };
+            const remeasure = () => {
+                measureMarkers();
+                selection.remeasure();
+                hover.remeasure();
+                if (!markerPreview) markIndicator.remeasure();
+            };
+            const resizeObserver = new ResizeObserver(remeasure);
+            resizeObserver.observe(nav);
+            resizeObserver.observe(marks);
 
-                const onEnter = () => {
-                    setRailOpen(true);
-                    setOpenGroup(slug);
-                };
-
-                group.addEventListener("mouseenter", onEnter);
-                return () => group.removeEventListener("mouseenter", onEnter);
-            });
-
-            rail.addEventListener("mouseenter", onRailEnter);
-            rail.addEventListener("mouseleave", onRailLeave);
-            rail.addEventListener("focusin", onRailFocus);
-            rail.addEventListener("focusout", onRailBlur);
-            rail.addEventListener("keydown", onRailKeyDown);
-            trigger.addEventListener("click", onTriggerClick);
-
-            const resizeObserver = new ResizeObserver(scheduleGeometry);
-            const mutationObserver = new MutationObserver(scheduleGeometry);
-            if (post) {
-                resizeObserver.observe(post);
-                mutationObserver.observe(post, {
-                    childList: true,
-                    subtree: true,
-                    attributes: true,
-                    attributeFilter: [
-                        "class",
-                        "style",
-                        "hidden",
-                        "width",
-                        "height",
-                    ],
-                });
-                post.addEventListener("load", scheduleGeometry, true);
-            }
-            document.addEventListener("scroll", scheduleGeometry, {
-                capture: true,
+            rail.addEventListener("mouseenter", onEnter);
+            rail.addEventListener("mouseleave", onLeave);
+            rail.addEventListener("focusin", onFocus);
+            rail.addEventListener("focusout", onBlur);
+            rail.addEventListener("keydown", onKey);
+            trigger.addEventListener("click", onTrigger);
+            trigger.addEventListener("pointermove", onTriggerPointerMove);
+            panel.addEventListener("click", onPanelClick);
+            panel.addEventListener("mouseover", onPanelHover);
+            panel.addEventListener("mouseleave", onPanelLeave);
+            panel.addEventListener("focusin", onPanelHover);
+            panel.addEventListener("focusout", onPanelBlur);
+            document.addEventListener("pointerdown", onOutside);
+            window.addEventListener("scroll", scheduleActive, {
                 passive: true,
             });
-            window.addEventListener("resize", scheduleGeometry);
-            document.fonts.addEventListener("loadingdone", scheduleGeometry);
-
-            const observer = new IntersectionObserver(
-                (entries) => {
-                    const visibleEntries = entries
-                        .filter((entry) => entry.isIntersecting)
-                        .sort(
-                            (a, b) =>
-                                a.boundingClientRect.top -
-                                b.boundingClientRect.top,
-                        );
-
-                    if (visibleEntries.length === 0) {
-                        return;
-                    }
-
-                    setActiveSlug(visibleEntries[0].target.id);
-                },
-                {
-                    rootMargin: "-18% 0px -68% 0px",
-                    threshold: [0, 1],
-                },
-            );
-
-            observedHeadings.forEach(({ element }) =>
-                observer.observe(element),
-            );
-
-            setActiveSlug(activeSlug);
-            setRailOpen(false);
-            updateGeometry();
+            window.addEventListener("resize", scheduleActive);
+            setOpen(false);
+            measureMarkers();
+            updateActive();
 
             cleanup = () => {
-                observer.disconnect();
-                rail.removeEventListener("mouseenter", onRailEnter);
-                rail.removeEventListener("mouseleave", onRailLeave);
-                rail.removeEventListener("focusin", onRailFocus);
-                rail.removeEventListener("focusout", onRailBlur);
-                rail.removeEventListener("keydown", onRailKeyDown);
-                trigger.removeEventListener("click", onTriggerClick);
+                rail.removeEventListener("mouseenter", onEnter);
+                rail.removeEventListener("mouseleave", onLeave);
+                rail.removeEventListener("focusin", onFocus);
+                rail.removeEventListener("focusout", onBlur);
+                rail.removeEventListener("keydown", onKey);
+                trigger.removeEventListener("click", onTrigger);
+                trigger.removeEventListener(
+                    "pointermove",
+                    onTriggerPointerMove,
+                );
+                panel.removeEventListener("click", onPanelClick);
+                panel.removeEventListener("mouseover", onPanelHover);
+                panel.removeEventListener("mouseleave", onPanelLeave);
+                panel.removeEventListener("focusin", onPanelHover);
+                panel.removeEventListener("focusout", onPanelBlur);
                 resizeObserver.disconnect();
-                mutationObserver.disconnect();
-                if (geometryTimer !== undefined) clearTimeout(geometryTimer);
-                if (geometryFrame !== undefined)
-                    cancelAnimationFrame(geometryFrame);
-                post?.removeEventListener("load", scheduleGeometry, true);
-                document.removeEventListener("scroll", scheduleGeometry, true);
-                window.removeEventListener("resize", scheduleGeometry);
-                document.fonts.removeEventListener(
-                    "loadingdone",
-                    scheduleGeometry,
-                );
-                removeGroupListeners.forEach((removeListener) =>
-                    removeListener(),
-                );
+                selection.destroy();
+                hover.destroy();
+                markIndicator.destroy();
+                document.removeEventListener("pointerdown", onOutside);
+                window.removeEventListener("scroll", scheduleActive);
+                window.removeEventListener("resize", scheduleActive);
+                if (frame) cancelAnimationFrame(frame);
+                if (pointerFrame) cancelAnimationFrame(pointerFrame);
             };
         };
 
@@ -366,3 +475,220 @@ const railChildListClass =
         document.addEventListener("astro:page-load", initPostRail);
     })();
 </script>
+
+<style>
+    .post-rail {
+        position: fixed;
+        z-index: 30;
+        left: 1rem;
+        bottom: 1rem;
+    }
+
+    .post-rail__trigger {
+        display: flex;
+        min-height: 2.75rem;
+        align-items: center;
+        padding: 0 0.875rem;
+        border: 1px solid
+            color-mix(in oklab, var(--foreground) 32%, var(--background));
+        border-radius: 0.375rem;
+        background: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-mono);
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+
+    .post-rail__trigger:hover,
+    .post-rail[data-open="true"] .post-rail__trigger {
+        background: var(--secondary);
+    }
+
+    .post-rail__trigger:focus-visible,
+    .post-rail__panel a:focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+    }
+
+    .post-rail__marks {
+        display: none;
+    }
+
+    .post-rail__panel {
+        position: absolute;
+        bottom: calc(100% + 0.5rem);
+        left: 0;
+        width: min(17rem, calc(100vw - 2rem));
+        max-height: min(65dvh, 28rem);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        padding: 0.5rem;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(0.25rem);
+        transition:
+            opacity 150ms ease,
+            transform 150ms ease,
+            visibility 150ms;
+    }
+
+    .post-rail[data-open="true"] .post-rail__panel {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .post-rail__list,
+    .post-rail__children {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .post-rail__navigation {
+        position: relative;
+        isolation: isolate;
+    }
+
+    .post-rail__selection,
+    .post-rail__hover {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+    }
+
+    .post-rail__selection {
+        opacity: 0.5;
+    }
+
+    .post-rail__group + .post-rail__group {
+        margin-top: 0.375rem;
+    }
+
+    .post-rail__panel a {
+        position: relative;
+        color: var(--foreground);
+        line-height: 1.4;
+        text-decoration: none;
+        overflow-wrap: anywhere;
+    }
+
+    .post-rail__panel a[data-active="true"] {
+        color: var(--primary);
+    }
+
+    .post-rail__children {
+        margin-left: 0.625rem;
+        padding-left: 0.375rem;
+        border-left: 1px solid var(--border);
+    }
+
+    @media (min-width: 80rem) {
+        .post-rail {
+            top: 50%;
+            bottom: auto;
+            left: 0;
+            transform: translateY(-50%);
+        }
+
+        .post-rail__trigger {
+            width: 2.75rem;
+            min-height: 2.75rem;
+            justify-content: center;
+            padding: 0.5rem;
+            border-color: transparent;
+            border-radius: 0 0.375rem 0.375rem 0;
+            background: transparent;
+        }
+
+        .post-rail__trigger:hover,
+        .post-rail[data-open="true"] .post-rail__trigger {
+            background: transparent;
+        }
+
+        .post-rail__mobile-label {
+            display: none;
+        }
+
+        .post-rail__marks {
+            position: relative;
+            display: flex;
+            max-height: 55vh;
+            width: 100%;
+            flex-direction: column;
+            align-items: flex-start;
+            overflow: hidden;
+        }
+
+        .post-rail__mark {
+            display: flex;
+            height: 0.625rem;
+            min-height: 2px;
+            flex: 1 1 0.625rem;
+            align-items: center;
+        }
+
+        .post-rail__mark > span {
+            display: block;
+            width: 1.5rem;
+            height: 2px;
+            border-radius: 2px;
+        }
+
+        .post-rail__mark > span::before {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            background: var(--foreground);
+            opacity: calc(0.38 + 0.42 * var(--mark-emphasis, 0));
+            transform: scaleX(calc(0.42 + 0.58 * var(--mark-emphasis, 0)));
+            transform-origin: left center;
+            content: "";
+        }
+
+        .post-rail__mark-indicator {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+            border-radius: 2px;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .post-rail__panel {
+            top: 50%;
+            bottom: auto;
+            left: 100%;
+            width: min(15rem, calc(100vw - 3.5rem));
+            padding: 0.375rem;
+            transform: translate(-0.25rem, -50%);
+        }
+
+        .post-rail__panel a {
+            min-height: 1.75rem;
+            padding-block: 0.125rem;
+        }
+
+        .post-rail__group + .post-rail__group {
+            margin-top: 0.25rem;
+        }
+
+        .post-rail__children {
+            margin-left: 0.5rem;
+            padding-left: 0.25rem;
+        }
+
+        .post-rail[data-open="true"] .post-rail__panel {
+            transform: translate(0, -50%);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .post-rail__panel {
+            transition: none;
+        }
+    }
+</style>

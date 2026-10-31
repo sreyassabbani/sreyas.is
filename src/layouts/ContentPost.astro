@@ -54,9 +54,10 @@ const proseClass = showHeadings
             <main class={articleContainerClass}>
                 <a
                     href="/thinking"
+                    data-thinking-back
                     class="inline-flex items-center rounded-full text-sm text-muted-foreground no-underline transition-colors duration-200 hover:text-foreground"
                 >
-                    Back
+                    ← thinking
                 </a>
 
                 <article class="mt-6">
@@ -119,3 +120,12 @@ const proseClass = showHeadings
         <CopyCodeButton />
     </body>
 </html>
+
+<script>
+    import { restoreThinkingBackLink } from "@/lib/thinking-return";
+
+    const backLink = document.querySelector<HTMLAnchorElement>(
+        "[data-thinking-back]",
+    );
+    if (backLink) restoreThinkingBackLink(backLink);
+</script>
