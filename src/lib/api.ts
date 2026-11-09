@@ -16,7 +16,7 @@ import {
 export const API_VERSION = 1;
 export const API_ROOT = `/api/v${API_VERSION}`;
 
-/** Pages whose JSX is purely decorative, so dropping them loses nothing. */
+/** Components that are purely decorative, so dropping them loses nothing. */
 const DECORATIVE_COMPONENTS = new Set(["EllipsisBreak"]);
 
 type Cleaned = { markdown: string; omitted: boolean };
@@ -28,6 +28,17 @@ type PageLike = {
 };
 
 export type ApiLink = { id: string; label: string; url: string };
+
+export type ApiProps = Record<string, string | number | boolean | null>;
+
+/**
+ * An entry split into renderable pieces. A component that wraps Markdown
+ * becomes a `markdown` block with its name as a `layout` hint; one that stands
+ * alone becomes a `widget` with whatever literal props it was given.
+ */
+export type ApiBlock =
+    | { type: "markdown"; text: string; layout?: string }
+    | { type: "widget"; name: string; props: ApiProps };
 
 export const API_LINKS: ApiLink[] = [
     {
@@ -49,6 +60,108 @@ export function entryApiHref(kind: "pages" | "thinking", id: string) {
     return `${API_ROOT}/${kind}/${id}.json`;
 }
 
+type Token =
+    | { kind: "text"; value: string }
+    | {
+          kind: "tag";
+          name: string;
+          role: "open" | "close" | "self";
+          raw: string;
+          /** The tag sits on a line of its own. */
+          block: boolean;
+      };
+
+/** Split MDX into text and component tags, leaving fenced code untouched. */
+function tokenize(source: string): Token[] {
+    const lines = source.replaceAll("\r\n", "\n").split("\n");
+    const tokens: Token[] = [];
+    let fence: string | null = null;
+    let prose: string[] = [];
+
+    const flush = () => {
+        if (prose.length === 0) return;
+        tokens.push(...scanProse(`${prose.join("\n")}\n`));
+        prose = [];
+    };
+
+    for (const line of lines) {
+        const marker = line.match(/^\s*(`{3,}|~{3,})/)?.[1];
+
+        if (fence) {
+            tokens.push({ kind: "text", value: `${line}\n` });
+            if (marker?.[0] === fence[0] && marker.length >= fence.length) {
+                fence = null;
+            }
+        } else if (marker) {
+            flush();
+            fence = marker;
+            tokens.push({ kind: "text", value: `${line}\n` });
+        } else {
+            prose.push(line);
+        }
+    }
+    flush();
+
+    return tokens;
+}
+
+function scanProse(raw: string): Token[] {
+    const text = raw
+        // `import x from "y"` (possibly multi-line) and `import "y"`.
+        .replaceAll(/^import\s[^;]*?from\s+["'][^"']+["'];?[ \t]*$/gm, "")
+        .replaceAll(/^import\s+["'][^"']+["'];?[ \t]*$/gm, "")
+        .replaceAll(/^export\s+.*$/gm, "")
+        .replaceAll(/\{\/\*[\s\S]*?\*\/\}/g, "");
+
+    const tokens: Token[] = [];
+    let index = 0;
+    let textStart = 0;
+
+    while (index < text.length) {
+        const start = text.indexOf("<", index);
+        if (start === -1) break;
+
+        const next = text[start + 1] ?? "";
+        const isClosing = next === "/" && /[A-Z]/.test(text[start + 2] ?? "");
+        const end =
+            /[A-Z]/.test(next) || isClosing ? findTagEnd(text, start) : -1;
+
+        if (end === -1) {
+            index = start + 1;
+            continue;
+        }
+
+        const tag = text.slice(start, end + 1);
+        const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+        const lineEnd = text.indexOf("\n", end);
+        const before = text.slice(lineStart, start);
+        const after = text.slice(end + 1, lineEnd === -1 ? undefined : lineEnd);
+
+        if (start > textStart) {
+            tokens.push({ kind: "text", value: text.slice(textStart, start) });
+        }
+        tokens.push({
+            kind: "tag",
+            name: tag.match(/^<\/?([A-Z][A-Za-z0-9_.]*)/)?.[1] ?? "",
+            role: isClosing ? "close" : tag.endsWith("/>") ? "self" : "open",
+            raw: tag,
+            block: !before.trim() && !after.trim(),
+        });
+        index = end + 1;
+        textStart = index;
+    }
+
+    if (textStart < text.length) {
+        tokens.push({ kind: "text", value: text.slice(textStart) });
+    }
+
+    return tokens;
+}
+
+function tidy(markdown: string) {
+    return markdown.replaceAll(/\n{3,}/g, "\n\n").trim();
+}
+
 /**
  * Turn the MDX source of an entry into plain Markdown: drop `import`/`export`
  * lines, MDX comments and JSX component tags (keeping a component's children),
@@ -57,98 +170,117 @@ export function entryApiHref(kind: "pages" | "thinking", id: string) {
  * Fenced code is left untouched.
  */
 export function mdxToMarkdown(source: string): Cleaned {
-    const lines = source.replaceAll("\r\n", "\n").split("\n");
-    const out: string[] = [];
-    let fence: string | null = null;
+    let markdown = "";
     let omitted = false;
-    let prose: string[] = [];
+
+    for (const token of tokenize(source)) {
+        if (token.kind === "text") {
+            markdown += token.value;
+        } else if (
+            token.role === "self" &&
+            !DECORATIVE_COMPONENTS.has(token.name)
+        ) {
+            omitted = true;
+        }
+    }
+
+    return { markdown: `${tidy(markdown)}\n`, omitted };
+}
+
+export function kebabCase(name: string) {
+    return name
+        .replaceAll(/([a-z0-9])([A-Z])/g, "$1-$2")
+        .replaceAll(".", "-")
+        .toLowerCase();
+}
+
+/** Literal props of a component tag; expressions that need code are skipped. */
+export function parseProps(tag: string): ApiProps {
+    const props: ApiProps = {};
+    const body = tag.replace(/^<[A-Za-z0-9_.]+/, "").replace(/\/?>$/, "");
+    const pattern =
+        /([A-Za-z_][\w:-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|\{([^{}]*)\}))?/g;
+
+    for (const match of body.matchAll(pattern)) {
+        const [, name, double, single, expression] = match;
+        if (name.includes(":")) continue;
+
+        if (double !== undefined || single !== undefined) {
+            props[name] = double ?? single ?? "";
+        } else if (expression !== undefined) {
+            try {
+                const value: unknown = JSON.parse(expression.trim());
+                if (
+                    value === null ||
+                    ["string", "number", "boolean"].includes(typeof value)
+                ) {
+                    props[name] = value as string | number | boolean | null;
+                }
+            } catch {
+                // An identifier or real code: only the web can evaluate it.
+            }
+        } else {
+            props[name] = true;
+        }
+    }
+
+    return props;
+}
+
+/** Split an entry into Markdown blocks (with layout hints) and widgets. */
+export function mdxToBlocks(source: string): ApiBlock[] {
+    const blocks: ApiBlock[] = [];
+    let buffer = "";
+    let wrapper: { name: string; depth: number } | null = null;
 
     const flush = () => {
-        if (prose.length === 0) return;
-        const cleaned = stripJsx(prose.join("\n"));
-        omitted ||= cleaned.omitted;
-        out.push(cleaned.markdown);
-        prose = [];
+        const text = tidy(buffer);
+        buffer = "";
+        if (!text) return;
+        blocks.push(
+            wrapper
+                ? { type: "markdown", text, layout: kebabCase(wrapper.name) }
+                : { type: "markdown", text },
+        );
     };
 
-    for (const line of lines) {
-        const marker = line.match(/^\s*(`{3,}|~{3,})/)?.[1];
+    for (const token of tokenize(source)) {
+        if (token.kind === "text") {
+            buffer += token.value;
+            continue;
+        }
 
-        if (fence) {
-            out.push(line);
-            if (marker?.[0] === fence[0] && marker.length >= fence.length) {
-                fence = null;
+        if (token.role === "self") {
+            if (DECORATIVE_COMPONENTS.has(token.name)) {
+                buffer += "\n\n";
+            } else if (token.block) {
+                flush();
+                blocks.push({
+                    type: "widget",
+                    name: kebabCase(token.name),
+                    props: parseProps(token.raw),
+                });
             }
-        } else if (marker) {
+            continue;
+        }
+
+        if (wrapper && token.name === wrapper.name) {
+            wrapper.depth += token.role === "open" ? 1 : -1;
+            if (wrapper.depth === 0) {
+                flush();
+                wrapper = null;
+            }
+            continue;
+        }
+
+        if (!wrapper && token.role === "open" && token.block) {
             flush();
-            fence = marker;
-            out.push(line);
-        } else {
-            prose.push(line);
+            wrapper = { name: token.name, depth: 1 };
         }
     }
     flush();
 
-    return {
-        markdown: `${out
-            .join("\n")
-            .replaceAll(/\n{3,}/g, "\n\n")
-            .trim()}\n`,
-        omitted,
-    };
-}
-
-function stripJsx(text: string): Cleaned {
-    let omitted = false;
-
-    let result = text
-        // `import x from "y"` (possibly multi-line) and `import "y"`.
-        .replaceAll(/^import\s[^;]*?from\s+["'][^"']+["'];?[ \t]*$/gm, "")
-        .replaceAll(/^import\s+["'][^"']+["'];?[ \t]*$/gm, "")
-        .replaceAll(/^export\s+.*$/gm, "")
-        .replaceAll(/\{\/\*[\s\S]*?\*\/\}/g, "");
-
-    let output = "";
-    let index = 0;
-
-    while (index < result.length) {
-        const start = result.indexOf("<", index);
-        if (start === -1) {
-            output += result.slice(index);
-            break;
-        }
-
-        const next = result[start + 1] ?? "";
-        const isClosing = next === "/" && /[A-Z]/.test(result[start + 2] ?? "");
-        const isOpening = /[A-Z]/.test(next);
-
-        if (!isOpening && !isClosing) {
-            output += result.slice(index, start + 1);
-            index = start + 1;
-            continue;
-        }
-
-        const end = findTagEnd(result, start);
-        if (end === -1) {
-            output += result.slice(index, start + 1);
-            index = start + 1;
-            continue;
-        }
-
-        const tag = result.slice(start, end + 1);
-        const name = tag.match(/^<\/?([A-Z][A-Za-z0-9_.]*)/)?.[1] ?? "";
-        const selfClosing = !isClosing && tag.endsWith("/>");
-
-        // A component that wraps prose (e.g. a margin note) keeps its text;
-        // one that stands alone is a visual or interactive element.
-        if (selfClosing && !DECORATIVE_COMPONENTS.has(name)) omitted = true;
-
-        output += result.slice(index, start);
-        index = end + 1;
-    }
-
-    result = output;
-    return { markdown: result, omitted };
+    return blocks;
 }
 
 /** Index of the `>` that closes the tag starting at `start`, honoring quotes and braces. */
@@ -219,6 +351,7 @@ export function buildPage(page: PageLike) {
         format: "markdown" as const,
         omitted,
         body: markdown,
+        blocks: mdxToBlocks(page.body ?? ""),
     };
 }
 
@@ -241,5 +374,6 @@ export function buildThinking(entry: ThinkingEntry) {
         format: "markdown" as const,
         omitted,
         body: markdown,
+        blocks: mdxToBlocks(entry.body ?? ""),
     };
 }

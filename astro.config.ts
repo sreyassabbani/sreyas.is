@@ -15,6 +15,7 @@ import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import type { VFile } from "vfile";
 import rehypeExternalLinks from "./src/lib/rehype-external-links";
+import rehypeShelf from "./src/lib/rehype-shelf";
 
 // An isolated build/check uses its own caches as well as its own .astro dir.
 const isolatedCache = process.env.SREYAS_ASTRO_ISOLATED_CACHE;
@@ -58,7 +59,11 @@ export default defineConfig({
     integrations: [mdx(), react(), sitemap()],
     markdown: {
         remarkPlugins: [remarkMath],
-        rehypePlugins: [rehypeKatexWithPostMacros, rehypeExternalLinks],
+        rehypePlugins: [
+            rehypeKatexWithPostMacros,
+            rehypeShelf,
+            rehypeExternalLinks,
+        ],
         syntaxHighlight: "shiki",
         shikiConfig: {
             themes: {
