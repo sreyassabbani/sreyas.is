@@ -4,9 +4,17 @@ import { formatInTimeZone } from "date-fns-tz";
 import { ClockIcon, MapPinIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
-const TIME_ZONE = "America/New_York";
+type HomePresenceProps = {
+    /** Where Sreyas is, as shown next to the pin. */
+    place?: string;
+    /** IANA time zone used for the clock. */
+    timeZone?: string;
+};
 
-export function HomePresence() {
+export function HomePresence({
+    place = "Alpharetta, GA",
+    timeZone = "America/New_York",
+}: HomePresenceProps) {
     const [now, setNow] = useState<Date | null>(null);
     const [mounted, setMounted] = useState(false);
 
@@ -32,11 +40,11 @@ export function HomePresence() {
         if (!now) return { etTime: "", offsetText: "" };
 
         // 1. Format the ET time string
-        const etTime = formatInTimeZone(now, TIME_ZONE, "h:mm a");
+        const etTime = formatInTimeZone(now, timeZone, "h:mm a");
 
         // 2. Calculate offsets relative to the user
         const etOffsetStr = now.toLocaleString("en-US", {
-            timeZone: TIME_ZONE,
+            timeZone,
             timeZoneName: "shortOffset",
         });
         const etOffsetMatch = etOffsetStr.match(/GMT([+-]\d+)(?::(\d+))?$/);
@@ -62,7 +70,7 @@ export function HomePresence() {
         }
 
         return { etTime, offsetText };
-    }, [now]);
+    }, [now, timeZone]);
 
     if (!mounted || !now) {
         return <div className="h-6 w-full" aria-hidden="true" />;
@@ -75,7 +83,7 @@ export function HomePresence() {
                     className="size-3.5 translate-y-[1px]"
                     aria-hidden="true"
                 />
-                <span className="font-medium">Alpharetta, GA</span>
+                <span className="font-medium">{place}</span>
             </div>
 
             <div className="flex items-center gap-1.5 transition-colors hover:text-foreground">
