@@ -45,7 +45,7 @@ function rehypeKatexWithPostMacros() {
 
 export default defineConfig({
     cacheDir: isolatedCache ? path.join(isolatedCache, "astro") : undefined,
-    site: "https://sreyassabbani.github.io",
+    site: "https://sreyas.is",
     redirects: {
         "/about": "/",
     },
