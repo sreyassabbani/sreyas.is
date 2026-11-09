@@ -6,15 +6,12 @@ import { useEffect, useMemo, useState } from "react";
 
 type HomePresenceProps = {
     /** Where Sreyas is, as shown next to the pin. */
-    place?: string;
+    place: string;
     /** IANA time zone used for the clock. */
-    timeZone?: string;
+    timeZone: string;
 };
 
-export function HomePresence({
-    place = "Alpharetta, GA",
-    timeZone = "America/New_York",
-}: HomePresenceProps) {
+export function HomePresence({ place, timeZone }: HomePresenceProps) {
     const [now, setNow] = useState<Date | null>(null);
     const [mounted, setMounted] = useState(false);
 
